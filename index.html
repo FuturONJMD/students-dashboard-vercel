@@ -190,7 +190,12 @@
     <script src="parent-info.js"></script>
     <script src="ai-engine.js"></script>
     <script>
-        let selectedStudent = Object.keys(studentsData)[0];
+        // Check for parent-specific URL: ?student=NAME
+        const urlParams = new URLSearchParams(window.location.search);
+        const parentMode = urlParams.get('student');
+        const isParentView = parentMode && studentsData[parentMode.toUpperCase()];
+
+        let selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
         let selectedWeekIdx = 0;
         let currentView = 'overview';
 
@@ -208,18 +213,26 @@
         }
 
         function renderSidebar() {
-            const students = Object.keys(studentsData);
             const weeks = studentsData[selectedStudent];
             let html = `
                 <div class="logo">
                     <div class="logo-icon">F</div>
-                    <div><div class="logo-text">FuturON Preschool</div><div class="logo-sub">Student Dashboard</div></div>
+                    <div><div class="logo-text">FuturON Preschool</div><div class="logo-sub">${isParentView ? 'Parent Portal' : 'Student Dashboard'}</div></div>
                 </div>
-                <div class="nav-category">STUDENTS</div>
             `;
-            students.forEach(s => {
-                html += `<div class="nav-item ${s === selectedStudent ? 'active' : ''}" onclick="selectStudent('${s}')">${s}</div>`;
-            });
+
+            // Only show student list in admin mode (no ?student= param)
+            if (!isParentView) {
+                const students = Object.keys(studentsData);
+                html += `<div class="nav-category">STUDENTS</div>`;
+                students.forEach(s => {
+                    html += `<div class="nav-item ${s === selectedStudent ? 'active' : ''}" onclick="selectStudent('${s}')">${s}</div>`;
+                });
+            } else {
+                html += `<div class="nav-category">STUDENT</div>`;
+                html += `<div class="nav-item active">${selectedStudent}</div>`;
+            }
+
             html += `<div class="nav-category">TIME PERIOD</div>`;
             weeks.forEach((w, i) => {
                 html += `<div class="nav-item ${i === selectedWeekIdx ? 'active' : ''}" onclick="selectWeek(${i})">${w.label}</div>`;
@@ -321,7 +334,8 @@
                 </div>
             `;
 
-            // All students progress bars
+            // All students progress bars (only in admin/teacher mode)
+            if (!isParentView) {
             html += `<div class="section-header">ALL STUDENTS - COMPLETION PROGRESS BARS</div><div class="student-progress">`;
             const weekLabel = studentsData[selectedStudent][selectedWeekIdx].label;
             Object.keys(studentsData).forEach(sname => {
@@ -349,6 +363,7 @@
                     </div>`;
             });
             html += `</div>`;
+            } // end if !isParentView
 
             // Day-wise percentage
             html += `<div class="section-header">DAY-WISE COMPLETION PERCENTAGE</div><div class="day-table">`;
@@ -550,7 +565,8 @@
             }
             html += `</div>`;
 
-            // Teacher Recommendations (all students)
+            // Teacher Recommendations (only in admin/teacher mode)
+            if (!isParentView) {
             const recs = AIEngine.generateRecommendations(selectedWeekIdx);
             html += `<div class="ai-card">
                 <div class="ai-card-header"><span style="font-size:1.2rem;">📋</span> TEACHER RECOMMENDATIONS <span class="ai-badge ai-badge-important" style="margin-left:8px;">${recs.length} items</span></div>`;
@@ -564,6 +580,7 @@
                 </div>`;
             });
             html += `</div>`;
+            }
 
             // AI Engine info
             html += `<div style="text-align:center; padding:1rem; opacity:0.6;">
