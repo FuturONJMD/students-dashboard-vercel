@@ -144,8 +144,12 @@
         function getWeekDays(week) {
             return week.days.filter(d => d.day !== 'SATURDAY' || d.snacks !== 'N/A');
         }
+        function getActiveDays(days) {
+            return days.filter(d => !isAbsent(d));
+        }
 
-        function pct(val) { return Math.round(val * 100); }
+        function pct(val) { return Math.min(Math.round(val * 100), 100); }
+        function isAbsent(d) { return d.snacks === 'N/A' && d.lunch === 'N/A' && d.arrival_time === 'N/A'; }
 
         function renderSidebar() {
             const students = Object.keys(studentsData);
@@ -206,10 +210,11 @@
         }
 
         function renderOverview(days) {
-            const snackAvg = days.reduce((s, d) => s + pct(d.snack_completion), 0) / days.length;
-            const lunchAvg = days.reduce((s, d) => s + pct(d.lunch_completion), 0) / days.length;
-            const waterAvg = days.reduce((s, d) => s + pct(d.water_completion), 0) / days.length;
-            const bottleTotal = days.reduce((s, d) => s + d.bottle_refill, 0);
+            const active = getActiveDays(days);
+            const snackAvg = active.length ? active.reduce((s, d) => s + pct(d.snack_completion), 0) / active.length : 0;
+            const lunchAvg = active.length ? active.reduce((s, d) => s + pct(d.lunch_completion), 0) / active.length : 0;
+            const waterAvg = active.length ? active.reduce((s, d) => s + pct(d.water_completion), 0) / active.length : 0;
+            const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
 
             let html = `
                 <div class="section-header">WEEKLY PERFORMANCE OVERVIEW</div>
@@ -228,10 +233,11 @@
                 const sw = studentsData[sname].find(w => w.label === weekLabel);
                 if (!sw) return;
                 const sd = getWeekDays(sw);
-                if (!sd.length) return;
-                const sSnack = sd.reduce((s, d) => s + pct(d.snack_completion), 0) / sd.length;
-                const sLunch = sd.reduce((s, d) => s + pct(d.lunch_completion), 0) / sd.length;
-                const sWater = sd.reduce((s, d) => s + pct(d.water_completion), 0) / sd.length;
+                const sActive = getActiveDays(sd);
+                if (!sActive.length) return;
+                const sSnack = sActive.reduce((s, d) => s + pct(d.snack_completion), 0) / sActive.length;
+                const sLunch = sActive.reduce((s, d) => s + pct(d.lunch_completion), 0) / sActive.length;
+                const sWater = sActive.reduce((s, d) => s + pct(d.water_completion), 0) / sActive.length;
                 const overall = Math.round((sSnack + sLunch + sWater) / 3);
                 const isActive = sname === selectedStudent;
                 html += `
@@ -266,16 +272,33 @@
 
             // Daily snapshot
             html += `<div class="section-header">DAILY SNAPSHOT</div>`;
+            html += `<div style="display:grid; grid-template-columns:1fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.5rem 0; border-bottom:1px solid #1f2937; margin-bottom:0.3rem;">
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">DAY / ARRIVAL</span>
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">SNACKS / % COMPLETION</span>
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">LUNCH / % COMPLETION</span>
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">INTERESTED IN / WATER</span>
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">BOTTLE REFILLED</span>
+                <span style="font-size:0.65rem; color:#6b7280; font-weight:600;">UNIFORM</span>
+            </div>`;
             days.forEach(d => {
+                if (isAbsent(d)) {
+                    html += `<div style="display:grid; grid-template-columns:1fr 5fr 1fr; gap:8px; padding:0.6rem 0; border-bottom:1px solid #111827; align-items:center;">
+                        <div><div class="snap-day">${d.day}</div></div>
+                        <div style="color:#6b7280; font-style:italic;">Absent</div>
+                        <div><span class="badge badge-yellow">ABSENT</span></div>
+                    </div>`;
+                    return;
+                }
                 const sp = pct(d.snack_completion), lp = pct(d.lunch_completion), wp = pct(d.water_completion);
-                const uniformBadge = d.uniform === 'YES' ? '<span class="badge badge-green">Uniform</span>' : d.uniform.toUpperCase().includes('COLOUR') ? '<span class="badge badge-purple">Color Day</span>' : `<span class="badge badge-yellow">${d.uniform}</span>`;
+                const uniformBadge = d.uniform === 'YES' ? '<span class="badge badge-green">Uniform</span>' : d.uniform === 'NO' ? '<span class="badge badge-yellow">No</span>' : d.uniform.toUpperCase().includes('COLOUR') ? '<span class="badge badge-purple">Color Day</span>' : `<span class="badge badge-yellow">${d.uniform}</span>`;
                 html += `
-                    <div class="snapshot-row">
-                        <div><div class="snap-day">${d.day}</div><div class="snap-time">Arrival: ${d.arrival_time}</div></div>
-                        <div><div class="snap-label">SNACKS (${sp}%)</div><div class="snap-value">${d.snacks}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${sp}%; background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div></div>
-                        <div><div class="snap-label">LUNCH (${lp}%)</div><div class="snap-value">${d.lunch}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${lp}%; background:linear-gradient(90deg,#10b981,#34d399)"></div></div></div>
-                        <div><div class="snap-label">INTERESTED IN</div><div class="snap-value">${d.interested_in}</div><div class="snap-label">Water: ${wp}% | Bottles: ${d.bottle_refill}</div></div>
-                        <div>${uniformBadge}</div>
+                    <div style="display:grid; grid-template-columns:1fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.6rem 0; border-bottom:1px solid #111827; align-items:center;">
+                        <div><div class="snap-day">${d.day}</div><div class="snap-time">${d.arrival_time}</div></div>
+                        <div><div class="snap-value">${d.snacks}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${sp}%; background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div><div style="font-size:0.65rem; color:#8b5cf6; margin-top:2px;">${sp}% completed</div></div>
+                        <div><div class="snap-value">${d.lunch}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${lp}%; background:linear-gradient(90deg,#10b981,#34d399)"></div></div><div style="font-size:0.65rem; color:#10b981; margin-top:2px;">${lp}% completed</div></div>
+                        <div><div class="snap-value">${d.interested_in}</div><div style="font-size:0.65rem; color:#3b82f6; margin-top:4px;">Water: ${wp}%</div></div>
+                        <div style="text-align:center;"><div style="font-size:1rem; font-weight:600; color:#f59e0b;">${d.bottle_refill}</div><div style="font-size:0.6rem; color:#6b7280;">bottles</div></div>
+                        <div style="text-align:center;">${uniformBadge}</div>
                     </div>`;
             });
             return html;
