@@ -149,7 +149,10 @@
         }
 
         function pct(val) { return Math.min(Math.round(val * 100), 100); }
-        function isAbsent(d) { return d.snacks === 'N/A' && d.lunch === 'N/A' && d.arrival_time === 'N/A'; }
+        function isAbsent(d) {
+            return (d.snacks === 'N/A' && d.lunch === 'N/A') || 
+                   (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0);
+        }
 
         function renderSidebar() {
             const students = Object.keys(studentsData);
