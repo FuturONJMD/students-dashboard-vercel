@@ -148,6 +148,26 @@
         .footer { text-align: center; padding: 2rem 0 1rem; border-top: 1px solid #1f2937; margin-top: 2rem; }
         .footer p { color: #6b7280; font-size: 0.7rem; }
         
+        /* PDF Download button */
+        .pdf-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; background: linear-gradient(135deg, #6C63FF, #8b5cf6); color: #fff; border: none; padding: 0.8rem 1.2rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); z-index: 1000; transition: all 0.2s; }
+        .pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(108,99,255,0.5); }
+        .pdf-btn svg { flex-shrink: 0; }
+
+        @media print {
+            .sidebar, .pdf-btn { display: none !important; }
+            .main { margin-left: 0 !important; padding: 0.5rem !important; }
+            body { background: #fff !important; color: #111 !important; }
+            .greeting-card, .kpi-card, .student-progress, .day-table, .ai-card { background: #f9fafb !important; border-color: #e5e7eb !important; color: #111 !important; }
+            .kpi-value, .day-cell-pct, .greeting-title, .student-name, .snap-value { color: #111 !important; }
+            .kpi-label, .kpi-sublabel, .greeting-subtitle, .snap-label, .snap-time, .day-cell-time { color: #4b5563 !important; }
+            .section-header, .nav-category { color: #374151 !important; }
+            .health-value { color: #059669 !important; }
+            .bar-track, .pct-bar, .snap-bar, .ai-pred-bar { background: #e5e7eb !important; }
+            .footer { border-color: #e5e7eb !important; }
+            .footer p { color: #6b7280 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main { margin-left: 0; padding: 1rem; }
@@ -162,6 +182,10 @@
         <aside class="sidebar" id="sidebar"></aside>
         <main class="main" id="main"></main>
     </div>
+    <button class="pdf-btn" onclick="downloadPDF()" title="Download as PDF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PDF
+    </button>
     <script src="data.js"></script>
     <script src="ai-engine.js"></script>
     <script>
@@ -535,6 +559,10 @@
             </div>`;
 
             return html;
+        }
+
+        function downloadPDF() {
+            window.print();
         }
 
         function selectStudent(s) { selectedStudent = s; selectedWeekIdx = 0; render(); }
