@@ -117,6 +117,32 @@
         .tab.active { background: #8b5cf6; color: #fff; }
         .tab:hover:not(.active) { color: #fff; }
         
+        /* AI Insights */
+        .ai-card { background: linear-gradient(135deg, #111827, #1a1f3a); border: 1px solid #1f2937; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+        .ai-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem; font-weight: 600; font-size: 0.9rem; }
+        .ai-tip { display: flex; align-items: flex-start; gap: 10px; padding: 0.6rem 0; border-bottom: 1px solid #111827; }
+        .ai-tip:last-child { border-bottom: none; }
+        .ai-tip-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .ai-tip-text { font-size: 0.8rem; color: #d1d5db; line-height: 1.4; }
+        .ai-severity-critical { border-left: 3px solid #ef4444; padding-left: 8px; }
+        .ai-severity-warning { border-left: 3px solid #f59e0b; padding-left: 8px; }
+        .ai-severity-positive { border-left: 3px solid #10b981; padding-left: 8px; }
+        .ai-summary-text { font-size: 0.85rem; color: #d1d5db; line-height: 1.6; padding: 0.5rem 0; }
+        .ai-prediction-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; padding: 0.6rem 0; border-bottom: 1px solid #111827; align-items: center; }
+        .ai-prediction-row:last-child { border-bottom: none; }
+        .ai-pred-label { font-size: 0.8rem; font-weight: 600; color: #9ca3af; }
+        .ai-pred-bar { height: 8px; border-radius: 4px; background: #1f2937; overflow: hidden; }
+        .ai-pred-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .ai-pred-value { font-size: 0.85rem; font-weight: 700; text-align: right; }
+        .ai-rec { display: flex; align-items: flex-start; gap: 10px; padding: 0.7rem; border-radius: 8px; margin-bottom: 0.5rem; }
+        .ai-rec-urgent { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+        .ai-rec-important { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .ai-rec-celebrate { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        .ai-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .ai-badge-urgent { background: #991b1b; color: #fca5a5; }
+        .ai-badge-important { background: #78350f; color: #fcd34d; }
+        .ai-badge-celebrate { background: #064e3b; color: #6ee7b7; }
+
         /* Footer */
         .footer { text-align: center; padding: 2rem 0 1rem; border-top: 1px solid #1f2937; margin-top: 2rem; }
         .footer p { color: #6b7280; font-size: 0.7rem; }
@@ -136,6 +162,7 @@
         <main class="main" id="main"></main>
     </div>
     <script src="data.js"></script>
+    <script src="ai-engine.js"></script>
     <script>
         let selectedStudent = Object.keys(studentsData)[0];
         let selectedWeekIdx = 0;
@@ -172,8 +199,9 @@
                 html += `<div class="nav-item ${i === selectedWeekIdx ? 'active' : ''}" onclick="selectWeek(${i})">${w.label}</div>`;
             });
             html += `<div class="nav-category">VIEW</div>`;
-            ['overview', 'details', 'analytics'].forEach(v => {
-                html += `<div class="nav-item ${v === currentView ? 'active' : ''}" onclick="selectView('${v}')">${v.charAt(0).toUpperCase() + v.slice(1)}</div>`;
+            ['overview', 'details', 'analytics', 'ai-insights'].forEach(v => {
+                const label = v === 'ai-insights' ? '🤖 AI Insights' : v.charAt(0).toUpperCase() + v.slice(1);
+                html += `<div class="nav-item ${v === currentView ? 'active' : ''}" onclick="selectView('${v}')">${label}</div>`;
             });
             html += `<div style="margin-top:auto; padding-top:2rem; text-align:center;"><p style="font-size:0.65rem; color:#4b5563;">UKG Class | July 2026</p></div>`;
             document.getElementById('sidebar').innerHTML = html;
@@ -206,7 +234,8 @@
 
             if (currentView === 'overview') html += renderOverview(days);
             else if (currentView === 'details') html += renderDetails(days);
-            else html += renderAnalytics(days);
+            else if (currentView === 'analytics') html += renderAnalytics(days);
+            else if (currentView === 'ai-insights') html += renderAIInsights();
 
             html += `<div class="footer"><p>FuturON Preschool - Jamma La Madugu</p><p style="margin-top:4px; color:#4b5563;">Student Daily Updates Dashboard | UKG Class | July 2026</p></div>`;
             document.getElementById('main').innerHTML = html;
@@ -401,6 +430,84 @@
                 </tr>`;
             });
             html += `</tbody></table></div>`;
+            return html;
+        }
+
+        function renderAIInsights() {
+            let html = '';
+
+            // Weekly Summary
+            const summary = AIEngine.generateWeeklySummary(selectedStudent, selectedWeekIdx);
+            html += `<div class="ai-card">
+                <div class="ai-card-header"><span style="font-size:1.2rem;">📝</span> WEEKLY SUMMARY</div>
+                <div class="ai-summary-text">${summary}</div>
+            </div>`;
+
+            // Personalized Tips
+            const tips = AIEngine.generateTips(selectedStudent, selectedWeekIdx);
+            html += `<div class="ai-card">
+                <div class="ai-card-header"><span style="font-size:1.2rem;">💡</span> PERSONALIZED TIPS</div>`;
+            tips.forEach(t => {
+                html += `<div class="ai-tip ai-severity-${t.severity}"><span class="ai-tip-icon">${t.icon}</span><span class="ai-tip-text">${t.text}</span></div>`;
+            });
+            html += `</div>`;
+
+            // Predictions
+            const preds = AIEngine.generatePredictions(selectedStudent);
+            html += `<div class="ai-card">
+                <div class="ai-card-header"><span style="font-size:1.2rem;">🔮</span> NEXT WEEK PREDICTIONS</div>`;
+            const predItems = [
+                { label: 'Snacks', data: preds.snack, color: '#8b5cf6' },
+                { label: 'Lunch', data: preds.lunch, color: '#10b981' },
+                { label: 'Water', data: preds.water, color: '#3b82f6' },
+                { label: 'Attendance', data: preds.attendance, color: '#f59e0b' }
+            ];
+            predItems.forEach(p => {
+                const predicted = p.data.predicted !== null ? p.data.predicted : '—';
+                const arrow = p.data.arrow || '→';
+                const barColor = p.data.color || '#6b7280';
+                html += `<div class="ai-prediction-row">
+                    <div class="ai-pred-label">${p.label}</div>
+                    <div><div class="ai-pred-bar"><div class="ai-pred-fill" style="width:${predicted}%; background:${p.color};"></div></div></div>
+                    <div class="ai-pred-value" style="color:${barColor}">${arrow} ${predicted}%</div>
+                </div>`;
+            });
+            html += `<div style="font-size:0.7rem; color:#6b7280; margin-top:0.8rem; padding-top:0.5rem; border-top:1px solid #1f2937;">Predictions are based on week-over-week trend analysis. Confidence improves with more data.</div></div>`;
+
+            // Anomaly Detection
+            const anomalies = AIEngine.detectAnomalies(selectedStudent, selectedWeekIdx);
+            html += `<div class="ai-card">
+                <div class="ai-card-header"><span style="font-size:1.2rem;">🔍</span> ANOMALY DETECTION</div>`;
+            if (anomalies.length === 0) {
+                html += `<div class="ai-tip ai-severity-positive"><span class="ai-tip-icon">✅</span><span class="ai-tip-text">No anomalies detected. Everything looks normal this week.</span></div>`;
+            } else {
+                anomalies.forEach(a => {
+                    html += `<div class="ai-tip ai-severity-${a.severity}"><span class="ai-tip-icon">${a.icon}</span><span class="ai-tip-text">${a.text}</span></div>`;
+                });
+            }
+            html += `</div>`;
+
+            // Teacher Recommendations (all students)
+            const recs = AIEngine.generateRecommendations(selectedWeekIdx);
+            html += `<div class="ai-card">
+                <div class="ai-card-header"><span style="font-size:1.2rem;">📋</span> TEACHER RECOMMENDATIONS <span class="ai-badge ai-badge-important" style="margin-left:8px;">${recs.length} items</span></div>`;
+            recs.forEach(r => {
+                html += `<div class="ai-rec ai-rec-${r.priority}">
+                    <span style="font-size:1.1rem;">${r.icon}</span>
+                    <div>
+                        <span class="ai-badge ai-badge-${r.priority}">${r.priority}</span>
+                        <div style="font-size:0.8rem; color:#d1d5db; margin-top:4px;">${r.text}</div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+
+            // AI Engine info
+            html += `<div style="text-align:center; padding:1rem; opacity:0.6;">
+                <div style="font-size:0.7rem; color:#6b7280;">🤖 AI Insights Engine v1.0</div>
+                <div style="font-size:0.65rem; color:#4b5563; margin-top:4px;">Client-side intelligence • Pattern analysis • Trend detection</div>
+            </div>`;
+
             return html;
         }
 
