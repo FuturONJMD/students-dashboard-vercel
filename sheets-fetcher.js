@@ -1,19 +1,18 @@
 const SHEET_ID = '1s8hz-qQEOk2UhGe2UAOx5MjVs-sSFs0s99vsgeXPyM0';
 const STUDENTS = ['VEDANSHI', 'HEMANVITH', 'BHAVYESH', 'ISRA', 'AYRA', 'AARUSH', 'PARNIK'];
+const APPS_SCRIPT_URL = ''; // PASTE YOUR APPS SCRIPT WEB APP URL HERE
 
 function parsePercentage(val) {
     if (!val || val === 'N/A' || val === '' || val === null) return 0;
     const s = String(val).replace('%', '').trim();
     const num = parseFloat(s);
     if (isNaN(num)) return 0;
-    // Formatted values come as "100" (from "100%"), raw as 1.0
     return num > 1 ? num / 100 : num;
 }
 
 function parseBottle(val) {
     if (!val || val === 'N/A' || val === '' || val === null) return 0;
     const s = String(val).trim();
-    // Handle fractions like "1/2"
     if (s.includes('/')) {
         const parts = s.split('/');
         return parseFloat(parts[0]) / parseFloat(parts[1]);
@@ -24,7 +23,6 @@ function parseBottle(val) {
 
 function formatArrivalTime(val) {
     if (!val || val === '' || val === 'N/A') return 'N/A';
-    // Value comes as "9:23" or "11:00" from Google's formatted output
     const s = String(val).trim();
     const match = s.match(/^(\d{1,2}):(\d{2})$/);
     if (!match) return s;
@@ -36,6 +34,77 @@ function formatArrivalTime(val) {
     return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
 }
 
+// === Apps Script fetch (NO caching, instant updates) ===
+async function fetchViaAppsScript() {
+    if (!APPS_SCRIPT_URL) return null;
+    const url = APPS_SCRIPT_URL + '?sheet=ALL&_=' + Date.now();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Apps Script error: ' + response.status);
+    const allData = await response.json();
+    if (allData.error) throw new Error(allData.error);
+    
+    const result = {};
+    for (const [studentName, rows] of Object.entries(allData)) {
+        const weeks = parseSheetRows(rows);
+        if (weeks.length > 0) {
+            result[studentName] = weeks;
+        }
+    }
+    return result;
+}
+
+// Parse rows from Apps Script (array of arrays with display values)
+function parseSheetRows(rows) {
+    const weeks = [];
+    let i = 0;
+    while (i < rows.length) {
+        const rowText = (rows[i] || []).join(' ').toUpperCase().trim();
+        const hasWeek = rowText.includes('WEEK');
+        const hasArrival = rowText.includes('ARRIVAL');
+        const isDayRow = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].some(d => rowText.startsWith(d));
+        
+        if (hasWeek && !hasArrival && !isDayRow) {
+            const weekMatch = rowText.match(/(\d+\w*\s*WEEK)/i);
+            let label = weekMatch ? 'July ' + weekMatch[1] : rowText;
+            for (const s of STUDENTS) {
+                label = label.replace(new RegExp(s, 'gi'), '').trim();
+            }
+            label = label.replace(/\s+/g, ' ').trim();
+            i++;
+            if (i >= rows.length) break;
+            const headerRow = rows[i] || [];
+            const dateRange = headerRow[0] || '';
+            i++;
+            const days = [];
+            const validDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+            for (let d = 0; d < 6 && i < rows.length; d++, i++) {
+                const r = rows[i] || [];
+                const dayName = (r[0] || '').toUpperCase().trim();
+                if (!validDays.includes(dayName)) break;
+                days.push({
+                    day: dayName,
+                    arrival_time: formatArrivalTime(r[1]),
+                    snacks: r[2] || 'N/A',
+                    snack_completion: parsePercentage(r[3]),
+                    interested_in: r[4] || 'N/A',
+                    lunch_completion: parsePercentage(r[5]),
+                    lunch: r[6] || 'N/A',
+                    water_completion: parsePercentage(r[7]),
+                    bottle_refill: parseBottle(r[8]),
+                    uniform: r[9] || 'N/A'
+                });
+            }
+            if (days.length > 0) {
+                weeks.push({ label: label, date_range: dateRange, days: days });
+            }
+        } else {
+            i++;
+        }
+    }
+    return weeks;
+}
+
+// === JSONP fallback (Google Visualization API - may be cached up to 5 min) ===
 function fetchSheetJSON(sheetName) {
     return new Promise((resolve, reject) => {
         const callbackName = 'sheetCallback_' + sheetName + '_' + Date.now();
@@ -80,7 +149,6 @@ function extractRows(table) {
                 if (!cell || cell.v == null) {
                     cells.push('');
                 } else if (cell.f) {
-                    // Use formatted value (handles dates, percentages, fractions)
                     cells.push(String(cell.f));
                 } else {
                     cells.push(String(cell.v));
@@ -93,59 +161,7 @@ function extractRows(table) {
 }
 
 function parseSheetData(rows) {
-    const weeks = [];
-    let i = 0;
-    while (i < rows.length) {
-        const rowText = (rows[i] || []).join(' ').toUpperCase().trim();
-        // Detect week header: contains "WEEK" but NOT day data or column headers
-        const hasWeek = rowText.includes('WEEK');
-        const hasArrival = rowText.includes('ARRIVAL');
-        const isDayRow = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].some(d => rowText.startsWith(d));
-        
-        if (hasWeek && !hasArrival && !isDayRow) {
-            // Week title row - extract label
-            const weekMatch = rowText.match(/(\d+\w*\s*WEEK)/i);
-            let label = weekMatch ? 'July ' + weekMatch[1] : rowText;
-            // Remove student names
-            for (const s of STUDENTS) {
-                label = label.replace(new RegExp(s, 'gi'), '').trim();
-            }
-            // Remove leftover "JULY" duplicates and clean up
-            label = label.replace(/\s+/g, ' ').trim();
-            i++;
-            // Next row: date range + headers
-            if (i >= rows.length) break;
-            const headerRow = rows[i] || [];
-            const dateRange = headerRow[0] || '';
-            i++;
-            // Next 6 rows: Mon-Sat
-            const days = [];
-            const validDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-            for (let d = 0; d < 6 && i < rows.length; d++, i++) {
-                const r = rows[i] || [];
-                const dayName = (r[0] || '').toUpperCase().trim();
-                if (!validDays.includes(dayName)) break;
-                days.push({
-                    day: dayName,
-                    arrival_time: formatArrivalTime(r[1]),
-                    snacks: r[2] || 'N/A',
-                    snack_completion: parsePercentage(r[3]),
-                    interested_in: r[4] || 'N/A',
-                    lunch_completion: parsePercentage(r[5]),
-                    lunch: r[6] || 'N/A',
-                    water_completion: parsePercentage(r[7]),
-                    bottle_refill: parseBottle(r[8]),
-                    uniform: r[9] || 'N/A'
-                });
-            }
-            if (days.length > 0) {
-                weeks.push({ label: label, date_range: dateRange, days: days });
-            }
-        } else {
-            i++;
-        }
-    }
-    return weeks;
+    return parseSheetRows(rows);
 }
 
 async function fetchStudentData(studentName) {
@@ -154,7 +170,7 @@ async function fetchStudentData(studentName) {
     return parseSheetData(rows);
 }
 
-async function fetchAllStudentsData() {
+async function fetchAllViaJSONP() {
     const data = {};
     const results = await Promise.allSettled(
         STUDENTS.map(async (name) => {
@@ -171,27 +187,46 @@ async function fetchAllStudentsData() {
 }
 
 async function loadData() {
+    let source = 'none';
     try {
-        const liveData = await fetchAllStudentsData();
-        if (Object.keys(liveData).length > 0) {
-            studentsData = liveData;
-            console.log('Live data loaded from Google Sheets:', Object.keys(studentsData).join(', '));
-            // Show live data status
-            const badge = document.createElement('div');
-            badge.style.cssText = 'position:fixed;bottom:10px;left:10px;background:#10b981;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;z-index:9999;opacity:0.8;';
-            badge.textContent = '✓ Live data (' + Object.keys(liveData).length + ' students, ' + (liveData[Object.keys(liveData)[0]]?.length || 0) + ' weeks)';
-            document.body.appendChild(badge);
-            setTimeout(() => badge.remove(), 5000);
-        } else {
-            console.warn('No data from Google Sheets, using fallback');
+        // Try Apps Script first (instant, no cache)
+        if (APPS_SCRIPT_URL) {
+            const appsData = await fetchViaAppsScript();
+            if (appsData && Object.keys(appsData).length > 0) {
+                studentsData = appsData;
+                source = 'apps-script';
+                console.log('Live data loaded via Apps Script (no cache):', Object.keys(studentsData).join(', '));
+            }
+        }
+        
+        // Fallback to JSONP (may be cached ~5 min by Google)
+        if (source === 'none') {
+            const jsonpData = await fetchAllViaJSONP();
+            if (Object.keys(jsonpData).length > 0) {
+                studentsData = jsonpData;
+                source = 'jsonp';
+                console.log('Live data loaded via JSONP (may be cached):', Object.keys(studentsData).join(', '));
+            }
         }
     } catch (err) {
-        console.warn('Failed to fetch from Google Sheets, using fallback data:', err.message);
-        // Show error status
-        const badge = document.createElement('div');
-        badge.style.cssText = 'position:fixed;bottom:10px;left:10px;background:#ef4444;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;z-index:9999;';
-        badge.textContent = '✗ Live data failed: ' + err.message;
-        document.body.appendChild(badge);
+        console.warn('Failed to fetch live data:', err.message);
     }
+
+    // Show status badge
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;bottom:12px;left:12px;padding:6px 14px;border-radius:8px;font-size:0.7rem;font-weight:600;z-index:9999;color:#fff;';
+    if (source === 'apps-script') {
+        badge.style.background = '#059669';
+        badge.textContent = '✓ LIVE (instant)';
+    } else if (source === 'jsonp') {
+        badge.style.background = '#d97706';
+        badge.textContent = '⚠ CACHED (~5min delay)';
+    } else {
+        badge.style.background = '#dc2626';
+        badge.textContent = '✗ OFFLINE (fallback data)';
+    }
+    document.body.appendChild(badge);
+    setTimeout(() => badge.remove(), 6000);
+
     renderApp();
 }
