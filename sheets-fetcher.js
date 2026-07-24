@@ -151,7 +151,101 @@ function parseSheetData(rows) {
 async function fetchStudentData(studentName) {
     const table = await fetchSheetJSON(studentName);
     const rows = extractRows(table);
-    return parseSheetData(rows);
+    
+    // Google consumes first rows as headers (parsedNumHeaders).
+    // The first week's title/date range are in the column labels.
+    // Extract first week info from table.cols
+    let firstWeekLabel = '';
+    let firstWeekDateRange = '';
+    if (table.cols && table.cols.length > 0) {
+        // Column A label has the date range: "06/07/2026 TO 11/07/2026"
+        firstWeekDateRange = table.cols[0]?.label || '';
+        // Column C label has "2ND WEEK SNACKS" — extract week part
+        const colCLabel = table.cols[2]?.label || '';
+        const weekMatch = colCLabel.match(/(\d+\w*\s*WEEK)/i);
+        if (weekMatch) {
+            firstWeekLabel = 'July ' + weekMatch[1].toUpperCase();
+        }
+    }
+    
+    // Parse the data rows — first rows are day data for week 1 (no WEEK marker)
+    const weeks = [];
+    const validDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    let i = 0;
+    
+    // Collect first week's days (they appear before any "WEEK" marker)
+    const firstWeekDays = [];
+    while (i < rows.length) {
+        const dayName = (rows[i]?.[0] || '').toUpperCase().trim();
+        if (validDays.includes(dayName)) {
+            const r = rows[i];
+            firstWeekDays.push({
+                day: dayName,
+                arrival_time: formatArrivalTime(r[1]),
+                snacks: r[2] || 'N/A',
+                snack_completion: parsePercentage(r[3]),
+                interested_in: r[4] || 'N/A',
+                lunch_completion: parsePercentage(r[5]),
+                lunch: r[6] || 'N/A',
+                water_completion: parsePercentage(r[7]),
+                bottle_refill: parseBottle(r[8]),
+                uniform: r[9] || 'N/A'
+            });
+            i++;
+        } else {
+            break;
+        }
+    }
+    if (firstWeekDays.length > 0 && firstWeekLabel) {
+        weeks.push({ label: firstWeekLabel, date_range: firstWeekDateRange, days: firstWeekDays });
+    }
+    
+    // Parse remaining weeks (they have "WEEK" marker rows)
+    while (i < rows.length) {
+        const rowText = (rows[i] || []).join(' ').toUpperCase().trim();
+        const hasWeek = rowText.includes('WEEK');
+        const hasArrival = rowText.includes('ARRIVAL');
+        const isDayRow = validDays.some(d => rowText.startsWith(d));
+        
+        if (hasWeek && !hasArrival && !isDayRow) {
+            const weekMatch = rowText.match(/(\d+\w*\s*WEEK)/i);
+            let label = weekMatch ? 'July ' + weekMatch[1].toUpperCase() : rowText;
+            for (const s of STUDENTS) {
+                label = label.replace(new RegExp(s, 'gi'), '').trim();
+            }
+            label = label.replace(/\s+/g, ' ').trim();
+            i++;
+            // Next row: date range + column headers
+            if (i >= rows.length) break;
+            const dateRange = rows[i]?.[0] || '';
+            i++;
+            // Collect days
+            const days = [];
+            for (let d = 0; d < 6 && i < rows.length; d++, i++) {
+                const r = rows[i] || [];
+                const dayName = (r[0] || '').toUpperCase().trim();
+                if (!validDays.includes(dayName)) break;
+                days.push({
+                    day: dayName,
+                    arrival_time: formatArrivalTime(r[1]),
+                    snacks: r[2] || 'N/A',
+                    snack_completion: parsePercentage(r[3]),
+                    interested_in: r[4] || 'N/A',
+                    lunch_completion: parsePercentage(r[5]),
+                    lunch: r[6] || 'N/A',
+                    water_completion: parsePercentage(r[7]),
+                    bottle_refill: parseBottle(r[8]),
+                    uniform: r[9] || 'N/A'
+                });
+            }
+            if (days.length > 0) {
+                weeks.push({ label: label, date_range: dateRange, days: days });
+            }
+        } else {
+            i++;
+        }
+    }
+    return weeks;
 }
 
 async function fetchAllStudentsData() {
