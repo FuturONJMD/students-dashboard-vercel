@@ -6,13 +6,34 @@ function parsePercentage(val) {
     const s = String(val).replace('%', '').trim();
     const num = parseFloat(s);
     if (isNaN(num)) return 0;
-    return num <= 1 ? num : num / 100;
+    // Formatted values come as "100" (from "100%"), raw as 1.0
+    return num > 1 ? num / 100 : num;
 }
 
 function parseBottle(val) {
     if (!val || val === 'N/A' || val === '' || val === null) return 0;
-    const num = parseFloat(String(val));
+    const s = String(val).trim();
+    // Handle fractions like "1/2"
+    if (s.includes('/')) {
+        const parts = s.split('/');
+        return parseFloat(parts[0]) / parseFloat(parts[1]);
+    }
+    const num = parseFloat(s);
     return isNaN(num) ? 0 : num;
+}
+
+function formatArrivalTime(val) {
+    if (!val || val === '' || val === 'N/A') return 'N/A';
+    // Value comes as "9:23" or "11:00" from Google's formatted output
+    const s = String(val).trim();
+    const match = s.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return s;
+    let h = parseInt(match[1]);
+    const m = match[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
 }
 
 function fetchSheetJSON(sheetName) {
@@ -56,7 +77,14 @@ function extractRows(table) {
         const cells = [];
         if (row.c) {
             for (const cell of row.c) {
-                cells.push(cell && cell.v != null ? String(cell.v) : '');
+                if (!cell || cell.v == null) {
+                    cells.push('');
+                } else if (cell.f) {
+                    // Use formatted value (handles dates, percentages, fractions)
+                    cells.push(String(cell.f));
+                } else {
+                    cells.push(String(cell.v));
+                }
             }
         }
         rows.push(cells);
@@ -68,18 +96,22 @@ function parseSheetData(rows) {
     const weeks = [];
     let i = 0;
     while (i < rows.length) {
-        const rowText = (rows[i] || []).join(' ').toUpperCase();
-        if (rowText.includes('WEEK') && !rowText.includes('ARRIVAL')) {
-            // Week title row
-            const parts = rowText.replace(/\s+/g, ' ').trim();
-            let label = parts;
-            // Try to extract just "July XTH WEEK" part
-            const weekMatch = parts.match(/(JULY\s+\d+\w*\s+WEEK)/i);
-            if (weekMatch) label = weekMatch[1];
-            // Remove student name from label
+        const rowText = (rows[i] || []).join(' ').toUpperCase().trim();
+        // Detect week header: contains "WEEK" but NOT day data or column headers
+        const hasWeek = rowText.includes('WEEK');
+        const hasArrival = rowText.includes('ARRIVAL');
+        const isDayRow = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].some(d => rowText.startsWith(d));
+        
+        if (hasWeek && !hasArrival && !isDayRow) {
+            // Week title row - extract label
+            const weekMatch = rowText.match(/(\d+\w*\s*WEEK)/i);
+            let label = weekMatch ? 'July ' + weekMatch[1] : rowText;
+            // Remove student names
             for (const s of STUDENTS) {
-                label = label.replace(s, '').trim();
+                label = label.replace(new RegExp(s, 'gi'), '').trim();
             }
+            // Remove leftover "JULY" duplicates and clean up
+            label = label.replace(/\s+/g, ' ').trim();
             i++;
             // Next row: date range + headers
             if (i >= rows.length) break;
@@ -95,7 +127,7 @@ function parseSheetData(rows) {
                 if (!validDays.includes(dayName)) break;
                 days.push({
                     day: dayName,
-                    arrival_time: r[1] || 'N/A',
+                    arrival_time: formatArrivalTime(r[1]),
                     snacks: r[2] || 'N/A',
                     snack_completion: parsePercentage(r[3]),
                     interested_in: r[4] || 'N/A',
