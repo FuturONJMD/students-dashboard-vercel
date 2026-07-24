@@ -3,7 +3,11 @@ const AIEngine = {
 
     // Helper: get active days for a student in a given week
     getActive(weekData) {
-        const days = weekData.days.filter(d => d.day !== 'SATURDAY' || d.snacks !== 'N/A');
+        const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+        const days = allDays.map(dayName => {
+            const found = weekData.days.find(d => d.day === dayName);
+            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' };
+        });
         return days.filter(d => !((d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0)));
     },
 
@@ -24,56 +28,54 @@ const AIEngine = {
         const currentWeek = weeks[weekIdx];
         const active = this.getActive(currentWeek);
         const tips = [];
+        const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
+        const totalDays = 6; // Mon-Sat
 
         if (!active.length) {
-            tips.push({ icon: '⚠️', text: `${studentName} was absent the entire week. Please check with the family.`, severity: 'critical' });
+            tips.push({ icon: '⚠️', text: `${name} was absent the entire week. Please ensure regular attendance for better learning.`, severity: 'critical' });
             return tips;
         }
 
-        const snackAvg = this.avg(active, 'snack_completion');
-        const lunchAvg = this.avg(active, 'lunch_completion');
-        const waterAvg = this.avg(active, 'water_completion');
+        const snackAvg = Math.round(this.avg(active, 'snack_completion'));
+        const lunchAvg = Math.round(this.avg(active, 'lunch_completion'));
+        const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const attendance = active.length;
-        const totalDays = currentWeek.days.filter(d => d.day !== 'SATURDAY').length;
+        const absentDays = totalDays - attendance;
+        const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
+        const totalBottles = bottleTotal + attendance;
 
-        // Compare with previous week if available
-        if (weekIdx > 0) {
-            const prevActive = this.getActive(weeks[weekIdx - 1]);
-            if (prevActive.length) {
-                const prevSnack = this.avg(prevActive, 'snack_completion');
-                const prevLunch = this.avg(prevActive, 'lunch_completion');
-                const prevWater = this.avg(prevActive, 'water_completion');
+        // Snack tips based on actual score
+        if (snackAvg >= 90) tips.push({ icon: '⭐', text: `${name} is eating snacks very well (${snackAvg}%). Keep sending the same type of snacks!`, severity: 'positive' });
+        else if (snackAvg >= 70) tips.push({ icon: '🍎', text: `${name} eats ${snackAvg}% of snacks. Try adding their favourite fruits to improve further.`, severity: 'info' });
+        else if (snackAvg >= 50) tips.push({ icon: '🍎', text: `${name} only finishes ${snackAvg}% of snacks. Consider smaller portions or different items.`, severity: 'warning' });
+        else tips.push({ icon: '🍎', text: `${name} is eating very less snacks (${snackAvg}%). Please try favourite foods or check if portion is too large.`, severity: 'critical' });
 
-                if (snackAvg - prevSnack >= 15) tips.push({ icon: '🎉', text: `Snack completion improved by ${Math.round(snackAvg - prevSnack)}% from last week! Great progress.`, severity: 'positive' });
-                if (prevSnack - snackAvg >= 20) tips.push({ icon: '📉', text: `Snack completion dropped ${Math.round(prevSnack - snackAvg)}% from last week. Consider offering preferred foods.`, severity: 'warning' });
-                if (lunchAvg - prevLunch >= 15) tips.push({ icon: '🎉', text: `Lunch completion improved by ${Math.round(lunchAvg - prevLunch)}% — keep encouraging!`, severity: 'positive' });
-                if (prevLunch - lunchAvg >= 20) tips.push({ icon: '📉', text: `Lunch completion declined ${Math.round(prevLunch - lunchAvg)}%. May need smaller portions or different menu items.`, severity: 'warning' });
-                if (waterAvg - prevWater >= 15) tips.push({ icon: '💧', text: `Water intake improved by ${Math.round(waterAvg - prevWater)}% this week!`, severity: 'positive' });
-                if (prevWater - waterAvg >= 20) tips.push({ icon: '💧', text: `Water intake dropped ${Math.round(prevWater - waterAvg)}%. Remind to drink more frequently.`, severity: 'warning' });
-            }
-        }
+        // Lunch tips based on actual score
+        if (lunchAvg >= 90) tips.push({ icon: '⭐', text: `${name} is finishing lunch very well (${lunchAvg}%). Great appetite at school!`, severity: 'positive' });
+        else if (lunchAvg >= 70) tips.push({ icon: '🍽️', text: `${name} eats ${lunchAvg}% of lunch. Good, but can improve with preferred menu items.`, severity: 'info' });
+        else if (lunchAvg >= 50) tips.push({ icon: '🍽️', text: `${name} only finishes ${lunchAvg}% of lunch. Try sending lighter or favourite meals.`, severity: 'warning' });
+        else tips.push({ icon: '🍽️', text: `${name} is eating very less lunch (${lunchAvg}%). Please discuss with teacher about food preferences.`, severity: 'critical' });
 
-        // Current week tips
-        if (snackAvg >= 95) tips.push({ icon: '⭐', text: 'Excellent snack completion — consistently finishing all snacks!', severity: 'positive' });
-        else if (snackAvg < 50) tips.push({ icon: '🍎', text: `Snack completion is low (${Math.round(snackAvg)}%). Try introducing favourite fruits or variety.`, severity: 'warning' });
+        // Water tips based on actual score
+        if (waterAvg >= 90) tips.push({ icon: '💧', text: `${name} drinks water very well (${waterAvg}%). Total ${totalBottles} bottles this week. Keep it up!`, severity: 'positive' });
+        else if (waterAvg >= 70) tips.push({ icon: '💧', text: `${name} drinks ${waterAvg}% of required water (${totalBottles} bottles). Remind to drink more often.`, severity: 'info' });
+        else if (waterAvg >= 50) tips.push({ icon: '💧', text: `${name} water intake is moderate (${waterAvg}%). Send a bigger bottle or add flavoured water.`, severity: 'warning' });
+        else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). This needs immediate attention for health.`, severity: 'critical' });
 
-        if (lunchAvg >= 95) tips.push({ icon: '⭐', text: 'Perfect lunch completion — eating well every day!', severity: 'positive' });
-        else if (lunchAvg < 60) tips.push({ icon: '🍽️', text: `Lunch completion needs attention (${Math.round(lunchAvg)}%). Consider smaller portions.`, severity: 'warning' });
+        // Attendance tips based on actual data
+        if (attendance === totalDays) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all ${totalDays} days. Consistency builds great habits.`, severity: 'positive' });
+        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of ${totalDays} days present.`, severity: 'info' });
+        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was absent ${absentDays} days this week. Regular attendance is important for learning.`, severity: 'warning' });
 
-        if (waterAvg >= 95) tips.push({ icon: '💧', text: 'Great hydration — drinking enough water throughout the day!', severity: 'positive' });
-        else if (waterAvg < 50) tips.push({ icon: '💧', text: `Water intake is low (${Math.round(waterAvg)}%). Set reminders for regular water breaks.`, severity: 'critical' });
-
-        if (attendance < totalDays - 1) tips.push({ icon: '📅', text: `Attended ${attendance}/${totalDays} days this week. Regular attendance helps build routine.`, severity: 'warning' });
-        if (attendance === totalDays) tips.push({ icon: '🏆', text: 'Perfect attendance this week! Consistency builds great habits.', severity: 'positive' });
-
-        // Check for uniform compliance
+        // Uniform compliance
         const uniformDays = active.filter(d => d.uniform === 'YES').length;
-        const uniformRequired = active.filter(d => d.uniform !== 'N/A').length;
-        if (uniformRequired > 0 && uniformDays < uniformRequired * 0.5) {
-            tips.push({ icon: '👕', text: 'Uniform compliance needs improvement. Please ensure proper uniform on school days.', severity: 'warning' });
+        const colourDays = active.filter(d => d.uniform && d.uniform.toUpperCase().includes('COLOUR')).length;
+        const nonUniformDays = active.filter(d => d.uniform === 'NO').length;
+        if (nonUniformDays > 0) {
+            tips.push({ icon: '👕', text: `${name} missed uniform on ${nonUniformDays} day(s). Please check the school calendar for uniform/colour dress days.`, severity: 'warning' });
         }
 
-        return tips.length ? tips : [{ icon: '✅', text: 'Doing well overall! Keep up the good work.', severity: 'positive' }];
+        return tips;
     },
 
     // ============================
@@ -82,9 +84,9 @@ const AIEngine = {
     generateWeeklySummary(studentName, weekIdx) {
         const weeks = studentsData[studentName];
         const currentWeek = weeks[weekIdx];
-        const allDays = currentWeek.days.filter(d => d.day !== 'SATURDAY');
         const active = this.getActive(currentWeek);
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
+        const totalDays = 6; // Mon-Sat
 
         if (!active.length) {
             return `${name} was absent for the entire week (${currentWeek.label}). No performance data is available. We recommend checking in with the family to ensure everything is okay.`;
@@ -95,36 +97,36 @@ const AIEngine = {
         const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const overall = Math.round((snackAvg + lunchAvg + waterAvg) / 3);
         const attendance = active.length;
-        const totalDays = allDays.length;
         const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
+        const totalBottles = bottleTotal + attendance;
 
         let summary = `${name} attended ${attendance} out of ${totalDays} days during ${currentWeek.label}. `;
 
         if (overall >= 90) {
-            summary += `Overall performance was outstanding with ${overall}% completion across meals and hydration. `;
+            summary += `Your child did excellent this week with ${overall}% overall performance in meals and hydration. `;
         } else if (overall >= 70) {
-            summary += `Overall performance was good at ${overall}% average completion. `;
+            summary += `Your child did well this week with ${overall}% overall performance. `;
         } else if (overall >= 50) {
-            summary += `Performance was moderate at ${overall}% average — there's room for improvement. `;
+            summary += `Performance was moderate at ${overall}% — there is room for improvement. `;
         } else {
-            summary += `Performance needs attention with only ${overall}% average completion. `;
+            summary += `Performance needs attention with only ${overall}% average. Please discuss with the teacher. `;
         }
 
         // Highlight strengths
         const strengths = [];
-        if (snackAvg >= 90) strengths.push('snack completion');
-        if (lunchAvg >= 90) strengths.push('lunch completion');
-        if (waterAvg >= 90) strengths.push('water intake');
-        if (strengths.length) summary += `Key strengths: ${strengths.join(', ')}. `;
+        if (snackAvg >= 90) strengths.push('snack eating');
+        if (lunchAvg >= 90) strengths.push('lunch eating');
+        if (waterAvg >= 90) strengths.push('water drinking');
+        if (strengths.length) summary += `Doing great in: ${strengths.join(', ')}. `;
 
         // Highlight areas needing work
         const improvements = [];
         if (snackAvg < 60) improvements.push(`snacks (${snackAvg}%)`);
         if (lunchAvg < 60) improvements.push(`lunch (${lunchAvg}%)`);
         if (waterAvg < 60) improvements.push(`water (${waterAvg}%)`);
-        if (improvements.length) summary += `Areas to improve: ${improvements.join(', ')}. `;
+        if (improvements.length) summary += `Needs improvement in: ${improvements.join(', ')}. `;
 
-        if (bottleTotal >= 5) summary += `Hydration was well-maintained with ${bottleTotal} bottle refills for the week. `;
+        summary += `Total water bottles consumed: ${totalBottles} (${attendance} from home + ${bottleTotal} refilled at school).`;
 
         // Trend comparison
         if (weekIdx > 0) {
