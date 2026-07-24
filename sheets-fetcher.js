@@ -1,6 +1,6 @@
 const SHEET_ID = '1s8hz-qQEOk2UhGe2UAOx5MjVs-sSFs0s99vsgeXPyM0';
 const STUDENTS = ['VEDANSHI', 'HEMANVITH', 'BHAVYESH', 'ISRA', 'AYRA', 'AARUSH', 'PARNIK'];
-const APPS_SCRIPT_URL = ''; // PASTE YOUR APPS SCRIPT WEB APP URL HERE
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLmJQA7DDGayA24sASh8dzIDu8aTr9tLgtBhQKcP5RHpaxWdngJ432upX5ndnDiVq8cQ/exec';
 
 function parsePercentage(val) {
     if (!val || val === 'N/A' || val === '' || val === null) return 0;
