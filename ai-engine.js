@@ -86,7 +86,7 @@ const AIEngine = {
         const arrivalMinutes = active.map(d => this.parseTimeToMinutes(d.arrival_time)).filter(m => m > 0);
         let punctualityScore = 25;
         if (arrivalMinutes.length) {
-            const lateArrivals = arrivalMinutes.filter(m => m > 570); // After 9:30 AM
+            const lateArrivals = arrivalMinutes.filter(m => m > 545); // After 9:05 AM
             punctualityScore = Math.max(0, 25 - (lateArrivals.length * 5));
         }
         score += punctualityScore;
@@ -162,7 +162,7 @@ const AIEngine = {
         const avgTime = Math.round(times.reduce((s, t) => s + t, 0) / times.length);
         const earliestTime = Math.min(...times);
         const latestTime = Math.max(...times);
-        const lateCount = times.filter(t => t > 570).length; // After 9:30
+        const lateCount = times.filter(t => t > 545).length; // After 9:05 AM
 
         const formatTime = (mins) => {
             const h = Math.floor(mins / 60);
@@ -245,7 +245,7 @@ const AIEngine = {
             if (arrivalPattern.onTimePercentage === 100) {
                 tips.push({ icon: '⏰', text: `${name} arrived on time every day (average: ${arrivalPattern.average}). Excellent punctuality!`, severity: 'positive' });
             } else if (arrivalPattern.lateCount >= 2) {
-                tips.push({ icon: '⏰', text: `${name} arrived late ${arrivalPattern.lateCount} times this week (latest: ${arrivalPattern.latest}). Aim for arrival before 9:30 AM.`, severity: 'warning' });
+                tips.push({ icon: '⏰', text: `${name} arrived late ${arrivalPattern.lateCount} times this week (latest: ${arrivalPattern.latest}). School time is 9:00 AM — please aim to arrive by 9:05 AM.`, severity: 'warning' });
             }
         }
 
@@ -377,7 +377,7 @@ const AIEngine = {
         // Late arrival pattern
         const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
         if (arrivalPattern && arrivalPattern.lateCount >= 3) {
-            anomalies.push({ severity: 'warning', icon: '🟠', text: `Late arrival pattern: ${arrivalPattern.lateCount} out of ${active.length} days arrived after 9:30 AM. Average arrival: ${arrivalPattern.average}.`, type: 'punctuality' });
+            anomalies.push({ severity: 'warning', icon: '🟠', text: `Late arrival pattern: ${arrivalPattern.lateCount} out of ${active.length} days arrived after 9:05 AM. Average arrival: ${arrivalPattern.average}. School time is 9:00 AM.`, type: 'punctuality' });
         }
 
         // Week-over-week drops
