@@ -174,7 +174,10 @@
             .kpi-grid { grid-template-columns: repeat(2, 1fr); }
             .snapshot-row { grid-template-columns: 1fr; gap: 4px; }
             .day-table-header, .day-table-row { grid-template-columns: 1fr 1fr 1fr 1fr; }
+            .mobile-nav { display: flex !important; }
         }
+        .mobile-nav { display: none; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+        .mobile-nav select { background: #1f2937; color: #fff; border: 1px solid #374151; border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.8rem; appearance: auto; flex: 1; min-width: 0; }
     </style>
 </head>
 <body>
@@ -272,6 +275,23 @@
                         <div style="font-size:0.65rem; color:#6b7280;">July 2026</div>
                     </div>
                 </div>
+            `;
+
+            // Mobile navigation (visible only on small screens)
+            const weeks = studentsData[selectedStudent];
+            const students = Object.keys(studentsData);
+            let studentOpts = '';
+            if (!isParentView) {
+                students.forEach(s => { studentOpts += `<option value="${s}" ${s === selectedStudent ? 'selected' : ''}>${s.charAt(0) + s.slice(1).toLowerCase()}</option>`; });
+            }
+            let weekOpts = '';
+            weeks.forEach((w, i) => { weekOpts += `<option value="${i}" ${i === selectedWeekIdx ? 'selected' : ''}>${w.label}</option>`; });
+            html += `<div class="mobile-nav">`;
+            if (!isParentView) html += `<select onchange="selectStudent(this.value)">${studentOpts}</select>`;
+            html += `<select onchange="selectWeek(Number(this.value))">${weekOpts}</select>`;
+            html += `</div>`;
+
+            html += `
                 <div class="header">
                     <div class="greeting-card">
                         <div class="greeting-title">${greeting}, ${selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase()}</div>
