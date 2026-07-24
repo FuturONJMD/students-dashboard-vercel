@@ -316,7 +316,7 @@
             let html = `
                 <div class="logo">
                     <img src="images/school-logo.jpg" alt="FuturON" class="logo-icon">
-                    <div><div class="logo-text">FuturON Preschool</div><div class="logo-sub">${isParentView ? 'Parent Portal' : 'Student Dashboard'}</div></div>
+                    <div><div class="logo-text">FuturON Preschool</div><div class="logo-sub">Creating Future CEOs</div><div class="logo-sub">${isParentView ? 'Parent Portal' : 'Student Dashboard'}</div></div>
                 </div>
             `;
 
@@ -354,17 +354,32 @@
             const studentNameFormatted = selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase();
 
             let html = `
-                <div class="school-banner">
-                    <div class="school-banner-left">
-                        <img src="images/school-logo.jpg" alt="FuturON" class="school-logo">
-                        <div>
-                            <div class="school-name">FuturON Preschool</div>
-                            <div class="school-address">Near SBI Bank, Tadipatri Road, Jammalamadugu</div>
+                <div class="school-banner" style="flex-direction:column; align-items:stretch; gap:0;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid rgba(51,65,85,0.5); margin-bottom:12px; position:relative; z-index:1;">
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <img src="images/school-logo.jpg" alt="FuturON" class="school-logo">
+                            <div>
+                                <div class="school-name">FuturON Preschool Jammalamadugu</div>
+                                <div class="school-address">Near SBI Bank, Tadipatri Road, Jammalamadugu Town, Kadapa District, Andhra Pradesh - 516434</div>
+                            </div>
+                        </div>
+                        <div class="school-badge">
+                            <div class="school-badge-class">UKG CLASS</div>
+                            <div class="school-badge-date">July 2026</div>
                         </div>
                     </div>
-                    <div class="school-badge">
-                        <div class="school-badge-class">UKG CLASS</div>
-                        <div class="school-badge-date">July 2026</div>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; position:relative; z-index:1;">
+                        <span style="font-size:0.8rem; font-weight:700; color:#f59e0b; background:rgba(245,158,11,0.1); padding:3px 12px; border-radius:5px; border:1px solid rgba(245,158,11,0.2);">Creating Future CEOs</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; position:relative; z-index:1;">
+                        <div style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.15); border-radius:10px; padding:10px 14px;">
+                            <div style="font-size:0.65rem; font-weight:700; color:#60a5fa; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Vision</div>
+                            <div style="font-size:0.7rem; color:#cbd5e1; line-height:1.5;">To democratize quality education by delivering world-class learning to every neighbourhood, empowering children to become self-learners, independent thinkers, and future leaders.</div>
+                        </div>
+                        <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.15); border-radius:10px; padding:10px 14px;">
+                            <div style="font-size:0.65rem; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Core Values</div>
+                            <div style="font-size:0.7rem; color:#cbd5e1; line-height:1.5;">Innovation &bull; Inspiration &bull; Impact &bull; Integrity &bull; Inclusivity</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -404,7 +419,7 @@
 
             html += renderOverview(days);
 
-            html += `<div class="footer"><p style="font-weight:600; color:#94a3b8; margin-bottom:8px;">FuturON Preschool - Near SBI Bank, Tadipatri Road, Jammalamadugu</p><p style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;"><a href="tel:+918519820888" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#60a5fa;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>+91 8519820888</a><a href="https://wa.me/918519820888" target="_blank" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#25d366;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp</a><a href="https://instagram.com/futuron_jammalamadugu" target="_blank" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#e1306c;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>@futuron_jammalamadugu</a></p><p style="margin-top:10px;">Student Daily Updates Dashboard | UKG Class | July 2026</p></div>`;
+            html += `<div class="footer"><p style="font-weight:600; color:#94a3b8; margin-bottom:4px;">FuturON Preschool Jammalamadugu</p><p style="color:#64748b; font-size:0.65rem;">Near SBI Bank, Tadipatri Road, Jammalamadugu Town, Kadapa District, Andhra Pradesh - 516434</p><p style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;"><a href="tel:+918519820888" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#60a5fa;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>+91 8519820888</a><a href="https://wa.me/918519820888" target="_blank" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#25d366;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp</a><a href="https://instagram.com/futuron_jammalamadugu" target="_blank" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#e1306c;font-weight:500;padding:6px 14px;border-radius:8px;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>@futuron_jammalamadugu</a></p><p style="margin-top:10px;">Student Daily Updates Dashboard | UKG Class | July 2026</p></div>`;
             document.getElementById('main').innerHTML = html;
         }
 
