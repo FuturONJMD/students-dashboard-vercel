@@ -192,7 +192,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            tips.push({ icon: '⚠️', text: `${name} was not present this week. Regular attendance helps children feel connected and build routines.`, severity: 'critical' });
+            tips.push({ icon: '⚠️', text: `${name} was not present this week. Each school day includes prayers, exercise, yoga, classes, activities, dramatics, and 3L skills. Regular attendance helps your child enjoy all these experiences.`, severity: 'critical' });
             return tips;
         }
 
@@ -237,7 +237,7 @@ const AIEngine = {
         // Attendance
         if (attendance === 6) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all 6 days. Consistency builds great habits.`, severity: 'positive' });
         else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of 6 days present.`, severity: 'info' });
-        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Consistent attendance helps them stay in rhythm with friends and activities.`, severity: 'warning' });
+        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Each day at school includes classes, activities, dramatics, and 3L skills — consistent attendance helps your child get the most out of these experiences.`, severity: 'warning' });
 
         // Arrival time insight
         const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
@@ -245,7 +245,7 @@ const AIEngine = {
             if (arrivalPattern.onTimePercentage === 100) {
                 tips.push({ icon: '⏰', text: `${name} arrived on time every day (average: ${arrivalPattern.average}). Excellent punctuality!`, severity: 'positive' });
             } else if (arrivalPattern.lateCount >= 2) {
-                tips.push({ icon: '⏰', text: `${name} arrived late ${arrivalPattern.lateCount} times this week (latest: ${arrivalPattern.latest}). School time is 9:00 AM — please aim to arrive by 9:05 AM.`, severity: 'warning' });
+                tips.push({ icon: '⏰', text: `${name} arrived after 9:05 AM on ${arrivalPattern.lateCount} day(s) this week (latest: ${arrivalPattern.latest}). Arriving by 9:00 AM helps your child participate in morning prayers, exercise, and yoga — a wonderful way to start the day!`, severity: 'warning' });
             }
         }
 
@@ -262,7 +262,7 @@ const AIEngine = {
         // Uniform compliance
         const nonUniformDays = active.filter(d => d.uniform === 'NO').length;
         if (nonUniformDays > 0) {
-            tips.push({ icon: '👕', text: `${name} missed uniform on ${nonUniformDays} day(s). Please check the school calendar for uniform/colour dress days.`, severity: 'warning' });
+            tips.push({ icon: '👕', text: `${name} was not in proper uniform on ${nonUniformDays} day(s). Wearing the correct uniform teaches discipline and creates a sense of belonging. Please check the school calendar for uniform and colour dress days.`, severity: 'warning' });
         }
 
         return tips;
