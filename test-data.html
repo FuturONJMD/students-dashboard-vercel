@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Data Test</title></head>
+<body>
+<pre id="out">Loading...</pre>
+<script src="sheets-fetcher.js"></script>
+<script>
+let studentsData = {};
+function renderApp() {
+    const out = document.getElementById('out');
+    const info = {
+        students: Object.keys(studentsData),
+        details: {}
+    };
+    for (const [name, weeks] of Object.entries(studentsData)) {
+        info.details[name] = weeks.map(w => ({
+            label: w.label,
+            date_range: w.date_range,
+            days: w.days.length,
+            firstDay: w.days[0]?.day,
+            lastDay: w.days[w.days.length-1]?.day
+        }));
+    }
+    out.textContent = JSON.stringify(info, null, 2);
+}
+loadData();
+</script>
+</body>
+</html>
