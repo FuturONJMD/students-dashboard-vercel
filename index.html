@@ -40,19 +40,59 @@
         .nav-item.active { background: #1a1040; color: #8b5cf6; border-left: 3px solid #8b5cf6; }
         
         /* Header */
-        .header { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+        .school-banner {
+            background: linear-gradient(135deg, #1a1040 0%, #2d1b69 50%, #1a1040 100%);
+            border: 1px solid #3b2580;
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        .school-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .school-banner-left { display: flex; align-items: center; gap: 14px; z-index: 1; }
+        .school-logo { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(139,92,246,0.5); box-shadow: 0 0 12px rgba(139,92,246,0.3); }
+        .school-name { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+        .school-address { font-size: 0.72rem; color: #a78bfa; margin-top: 2px; }
+        .school-badge { z-index: 1; text-align: right; }
+        .school-badge-class { font-size: 0.75rem; color: #c4b5fd; font-weight: 600; background: rgba(139,92,246,0.2); padding: 3px 10px; border-radius: 20px; display: inline-block; }
+        .school-badge-date { font-size: 0.65rem; color: #6b7280; margin-top: 4px; }
+
+        .header { display: flex; gap: 1.2rem; margin-bottom: 2rem; align-items: stretch; }
+        .student-profile-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #111827, #1a1040);
+            border: 1px solid #2d1b69;
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            min-width: 130px;
+        }
+        .student-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid #8b5cf6; box-shadow: 0 0 16px rgba(139,92,246,0.4); }
+        .student-avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #6C63FF, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: #fff; border: 3px solid #8b5cf6; box-shadow: 0 0 16px rgba(139,92,246,0.4); }
+        .student-profile-name { font-size: 0.75rem; color: #c4b5fd; margin-top: 8px; font-weight: 600; text-transform: capitalize; }
         .greeting-card {
             flex: 1;
             background: linear-gradient(135deg, #111827, #1a1040);
             border: 1px solid #2d1b69;
             border-radius: 16px;
             padding: 1.5rem 2rem;
+            display: flex; flex-direction: column; justify-content: center;
         }
-        .greeting-title { font-size: 1.4rem; font-weight: 600; color: #fff; }
-        .greeting-subtitle { font-size: 0.85rem; color: #9ca3af; margin-top: 0.3rem; }
+        .greeting-title { font-size: 1.3rem; font-weight: 600; color: #fff; }
+        .greeting-subtitle { font-size: 0.82rem; color: #9ca3af; margin-top: 0.3rem; }
         .progress-line { height: 4px; width: 200px; border-radius: 2px; background: linear-gradient(90deg, #8b5cf6 60%, #1f2937 60%); margin-top: 1rem; }
         
-        .health-card { text-align: center; padding: 1rem 1.5rem; }
+        .health-card { text-align: center; padding: 1rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827, #0d2818); border: 1px solid #065f46; border-radius: 16px; min-width: 110px; }
         .health-value { font-size: 2.5rem; font-weight: 700; color: #10b981; }
         .health-label { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; margin-top: 0.2rem; }
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.3rem; }
@@ -175,6 +215,12 @@
             .snapshot-row { grid-template-columns: 1fr; gap: 4px; }
             .day-table-header, .day-table-row { grid-template-columns: 1fr 1fr 1fr 1fr; }
             .mobile-nav { display: flex !important; }
+            .school-banner { padding: 0.8rem 1rem; flex-wrap: wrap; gap: 8px; }
+            .school-name { font-size: 1rem; }
+            .header { flex-direction: column; gap: 0.8rem; }
+            .student-profile-card { flex-direction: row; padding: 1rem; gap: 12px; }
+            .health-card { flex-direction: row; gap: 10px; padding: 0.8rem 1.2rem; }
+            .health-value { font-size: 1.8rem; }
         }
         .mobile-nav { display: none; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
         .mobile-nav select { background: #1f2937; color: #fff; border: 1px solid #374151; border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.8rem; appearance: auto; flex: 1; min-width: 0; }
@@ -261,18 +307,21 @@
             const badgeClass = attendancePct >= 80 ? 'badge-green' : 'badge-yellow';
             const badgeText = attendancePct >= 80 ? 'EXCELLENT' : attendancePct >= 60 ? 'GOOD' : 'NEEDS ATTENTION';
 
+            const studentInitial = selectedStudent.charAt(0);
+            const studentNameFormatted = selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase();
+
             let html = `
-                <div style="background:linear-gradient(135deg,#1a1040,#0d1117); border:1px solid #2d1b69; border-radius:12px; padding:0.8rem 1.5rem; margin-bottom:1.2rem; display:flex; align-items:center; justify-content:space-between;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <img src="images/school-logo.jpg" alt="FuturON" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
+                <div class="school-banner">
+                    <div class="school-banner-left">
+                        <img src="images/school-logo.jpg" alt="FuturON" class="school-logo">
                         <div>
-                            <div style="font-size:1rem; font-weight:700; color:#fff;">FuturON Preschool</div>
-                            <div style="font-size:0.7rem; color:#9ca3af;">Near SBI Bank, Tadipatri Road, Jammalamadugu</div>
+                            <div class="school-name">FuturON Preschool</div>
+                            <div class="school-address">Near SBI Bank, Tadipatri Road, Jammalamadugu</div>
                         </div>
                     </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:0.7rem; color:#8b5cf6; font-weight:600;">UKG CLASS</div>
-                        <div style="font-size:0.65rem; color:#6b7280;">July 2026</div>
+                    <div class="school-badge">
+                        <div class="school-badge-class">UKG CLASS</div>
+                        <div class="school-badge-date">July 2026</div>
                     </div>
                 </div>
             `;
@@ -293,13 +342,14 @@
 
             html += `
                 <div class="header">
-                    <div class="greeting-card" style="display:flex; align-items:center; gap:12px;">
-                        <img src="images/${selectedStudent}.jpg" alt="${selectedStudent}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #6C63FF;" onerror="this.style.display='none'">
-                        <div>
-                            <div class="greeting-title">${greeting}, ${selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase()}</div>
-                            <div class="greeting-subtitle">Week report: ${week.date_range || ''} | ${week.label}</div>
-                            <div class="progress-line"></div>
-                        </div>
+                    <div class="student-profile-card">
+                        <img src="images/${selectedStudent}.jpg" alt="${studentNameFormatted}" class="student-avatar" onerror="this.outerHTML='<div class=student-avatar-placeholder>${studentInitial}</div>'">
+                        <div class="student-profile-name">${studentNameFormatted}</div>
+                    </div>
+                    <div class="greeting-card">
+                        <div class="greeting-title">${greeting}, ${studentNameFormatted}!</div>
+                        <div class="greeting-subtitle">Week report: ${week.date_range || ''} | ${week.label}</div>
+                        <div class="progress-line"></div>
                     </div>
                     <div class="health-card">
                         <div class="health-value">${attendancePct}</div>
