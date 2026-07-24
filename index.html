@@ -199,8 +199,14 @@
         let selectedWeekIdx = 0;
 
 
+        const ALL_DAYS = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+
         function getWeekDays(week) {
-            return week.days.filter(d => d.day !== 'SATURDAY' || d.snacks !== 'N/A');
+            return ALL_DAYS.map(dayName => {
+                const found = week.days.find(d => d.day === dayName);
+                if (found) return found;
+                return { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' };
+            });
         }
         function getActiveDays(days) {
             return days.filter(d => !isAbsent(d));
@@ -323,6 +329,10 @@
                     <div class="kpi-card border-orange">
                         <div class="kpi-icon" style="background:rgba(245,158,11,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v6"/><path d="M8 22h8"/><path d="M12 18h0"/><circle cx="12" cy="18" r="2"/></svg></div>
                         <div class="kpi-label">Total Water Bottles</div><div class="kpi-value accent-orange">${bottleTotal + active.length}</div><div class="kpi-sublabel">${active.length} brought from home + ${bottleTotal} refilled at school</div>
+                    </div>
+                    <div class="kpi-card" style="border-left:4px solid #ef4444;">
+                        <div class="kpi-icon" style="background:rgba(239,68,68,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                        <div class="kpi-label">Days Absent</div><div class="kpi-value" style="color:#ef4444;">${days.length - active.length}</div><div class="kpi-sublabel">${active.length} of ${days.length} days present this week</div>
                     </div>
                 </div>
             `;
