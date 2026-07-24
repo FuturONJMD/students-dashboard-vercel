@@ -534,15 +534,19 @@
 
         function render() { renderSidebar(); renderMain(); }
         function renderApp() {
+            if (Object.keys(studentsData).length === 0) {
+                document.getElementById('main').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:60vh;"><div style="text-align:center;"><div style="font-size:2rem;color:#ef4444;margin-bottom:1rem;">No Data</div><div style="color:#9ca3af;font-size:0.85rem;">Could not load data from Google Sheets. Please try refreshing.</div></div></div>';
+                return;
+            }
             isParentView = parentMode && studentsData[parentMode.toUpperCase()];
             selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
             selectedWeekIdx = 0;
             render();
         }
 
-        // Load live data from Google Sheets, then render
-        render(); // Show immediately with fallback data
-        loadData(); // Fetch live data and re-render
+        // Show loading state, then fetch live data
+        document.getElementById('main').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:60vh;"><div style="text-align:center;"><div style="font-size:2rem;margin-bottom:1rem;">Loading...</div><div style="color:#9ca3af;font-size:0.85rem;">Fetching live data from Google Sheets</div></div></div>';
+        loadData(); // Fetch live data and render
     </script>
 </body>
 </html>
