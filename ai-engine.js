@@ -41,8 +41,17 @@ const AIEngine = {
         const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const attendance = active.length;
         const absentDays = totalDays - attendance;
-        const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
-        const totalBottles = bottleTotal + attendance;
+        const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
+        const weekBottles = bottleRefills + attendance;
+
+        // Calculate monthly cumulative bottles (all weeks up to and including current)
+        let monthlyBottles = 0;
+        let monthlyDaysPresent = 0;
+        for (let w = 0; w <= weekIdx; w++) {
+            const wActive = this.getActive(weeks[w]);
+            monthlyBottles += wActive.reduce((s, d) => s + d.bottle_refill, 0) + wActive.length;
+            monthlyDaysPresent += wActive.length;
+        }
 
         // Snack tips based on actual score
         if (snackAvg >= 90) tips.push({ icon: '⭐', text: `${name} is eating snacks very well (${snackAvg}%). Keep sending the same type of snacks!`, severity: 'positive' });
@@ -57,10 +66,10 @@ const AIEngine = {
         else tips.push({ icon: '🍽️', text: `${name} is eating very less lunch (${lunchAvg}%). Please discuss with teacher about food preferences.`, severity: 'critical' });
 
         // Water tips based on actual score
-        if (waterAvg >= 90) tips.push({ icon: '💧', text: `${name} drinks water very well (${waterAvg}%). Total ${totalBottles} bottles this week. Keep it up!`, severity: 'positive' });
-        else if (waterAvg >= 70) tips.push({ icon: '💧', text: `${name} drinks ${waterAvg}% of required water (${totalBottles} bottles). Remind to drink more often.`, severity: 'info' });
-        else if (waterAvg >= 50) tips.push({ icon: '💧', text: `${name} water intake is moderate (${waterAvg}%). Send a bigger bottle or add flavoured water.`, severity: 'warning' });
-        else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). This needs immediate attention for health.`, severity: 'critical' });
+        if (waterAvg >= 90) tips.push({ icon: '💧', text: `${name} drinks water very well (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} days. Keep it up!`, severity: 'positive' });
+        else if (waterAvg >= 70) tips.push({ icon: '💧', text: `${name} drinks ${waterAvg}% of required water. This week: ${Math.round(weekBottles)} bottles (monthly: ${Math.round(monthlyBottles)}). Remind to drink more often.`, severity: 'info' });
+        else if (waterAvg >= 50) tips.push({ icon: '💧', text: `${name} water intake is moderate (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Send a bigger bottle or add flavoured water.`, severity: 'warning' });
+        else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). Only ${Math.round(weekBottles)} bottles this week. This needs immediate attention.`, severity: 'critical' });
 
         // Attendance tips based on actual data
         if (attendance === totalDays) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all ${totalDays} days. Consistency builds great habits.`, severity: 'positive' });
@@ -97,8 +106,17 @@ const AIEngine = {
         const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const overall = Math.round((snackAvg + lunchAvg + waterAvg) / 3);
         const attendance = active.length;
-        const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
-        const totalBottles = bottleTotal + attendance;
+        const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
+        const weekBottles = bottleRefills + attendance;
+
+        // Calculate monthly cumulative
+        let monthlyBottles = 0;
+        let monthlyDaysPresent = 0;
+        for (let w = 0; w <= weekIdx; w++) {
+            const wActive = this.getActive(weeks[w]);
+            monthlyBottles += wActive.reduce((s, d) => s + d.bottle_refill, 0) + wActive.length;
+            monthlyDaysPresent += wActive.length;
+        }
 
         let summary = `${name} attended ${attendance} out of ${totalDays} days during ${currentWeek.label}. `;
 
@@ -126,7 +144,7 @@ const AIEngine = {
         if (waterAvg < 60) improvements.push(`water (${waterAvg}%)`);
         if (improvements.length) summary += `Needs improvement in: ${improvements.join(', ')}. `;
 
-        summary += `Total water bottles consumed: ${totalBottles} (${attendance} from home + ${bottleTotal} refilled at school).`;
+        summary += `This week water bottles: ${Math.round(weekBottles)} (${attendance} from home + ${Math.round(bottleRefills)} refilled). Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} school days.`;
 
         // Trend comparison
         if (weekIdx > 0) {
