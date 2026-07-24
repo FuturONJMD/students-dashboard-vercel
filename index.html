@@ -236,13 +236,14 @@
         Download PDF
     </button>
     <script src="data.js"></script>
+    <script src="sheets-fetcher.js"></script>
     <script src="parent-info.js"></script>
     <script src="ai-engine.js"></script>
     <script>
         // Check for parent-specific URL: ?student=NAME
         const urlParams = new URLSearchParams(window.location.search);
         const parentMode = urlParams.get('student');
-        const isParentView = parentMode && studentsData[parentMode.toUpperCase()];
+        let isParentView = parentMode && studentsData[parentMode.toUpperCase()];
 
         let selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
         let selectedWeekIdx = 0;
@@ -529,8 +530,16 @@
         function selectWeek(i) { selectedWeekIdx = i; render(); }
 
         function render() { renderSidebar(); renderMain(); }
+        function renderApp() {
+            isParentView = parentMode && studentsData[parentMode.toUpperCase()];
+            selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
+            selectedWeekIdx = 0;
+            render();
+        }
 
-        render();
+        // Load live data from Google Sheets, then render
+        render(); // Show immediately with fallback data
+        loadData(); // Fetch live data and re-render
     </script>
 </body>
 </html>
