@@ -114,7 +114,7 @@
         .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
         .kpi-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; margin-bottom: 0.2rem; }
         .kpi-value { font-size: 2.2rem; font-weight: 700; margin: 0.4rem 0; }
-        .kpi-sublabel { font-size: 0.72rem; color: #94a3b8; font-weight: 400; line-height: 1.4; }
+        .kpi-sublabel { font-size: 0.82rem; color: #cbd5e1; font-weight: 400; line-height: 1.5; margin-top: 0.3rem; }
         .border-purple { border-top: 3px solid #8b5cf6; }
         .border-green { border-top: 3px solid #10b981; }
         .border-blue { border-top: 3px solid #3b82f6; }
@@ -390,30 +390,30 @@
                 <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
                     <div class="kpi-card border-purple">
                         <div class="kpi-icon" style="background:rgba(139,92,246,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
-                        <div class="kpi-label">Snack Eaten</div><div class="kpi-value accent-purple">${Math.round(snackAvg)}%</div><div class="kpi-sublabel">How much snack your child finished</div>
+                        <div class="kpi-label">Snack Eaten</div><div class="kpi-value accent-purple">${Math.round(snackAvg)}%</div><div class="kpi-sublabel">Your child finished ${Math.round(snackAvg)}% of snacks this week</div>
                     </div>
                     <div class="kpi-card border-green">
                         <div class="kpi-icon" style="background:rgba(16,185,129,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3"/><path d="M18 22V7"/></svg></div>
-                        <div class="kpi-label">Lunch Eaten</div><div class="kpi-value accent-green">${Math.round(lunchAvg)}%</div><div class="kpi-sublabel">How much lunch your child finished</div>
+                        <div class="kpi-label">Lunch Eaten</div><div class="kpi-value accent-green">${Math.round(lunchAvg)}%</div><div class="kpi-sublabel">Your child finished ${Math.round(lunchAvg)}% of lunch served at school</div>
                     </div>
                     <div class="kpi-card border-blue">
                         <div class="kpi-icon" style="background:rgba(59,130,246,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg></div>
-                        <div class="kpi-label">Water Drinking</div><div class="kpi-value accent-blue">${Math.round(waterAvg)}%</div><div class="kpi-sublabel">How well your child stayed hydrated</div>
+                        <div class="kpi-label">Water Drinking</div><div class="kpi-value accent-blue">${Math.round(waterAvg)}%</div><div class="kpi-sublabel">Your child drank ${Math.round(waterAvg)}% of the daily recommended water</div>
                     </div>
                 </div>
                 <div class="section-header">ATTENDANCE & WATER BOTTLES</div>
                 <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
                     <div class="kpi-card" style="border-top:3px solid #22c55e;">
                         <div class="kpi-icon" style="background:rgba(34,197,94,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                        <div class="kpi-label">Days Present</div><div class="kpi-value" style="color:#34d399;">${active.length}</div><div class="kpi-sublabel">Out of ${days.length} school days this week</div>
+                        <div class="kpi-label">Days Present</div><div class="kpi-value" style="color:#34d399;">${active.length}</div><div class="kpi-sublabel">Your child attended ${active.length} out of ${days.length} school days this week</div>
                     </div>
                     <div class="kpi-card" style="border-top:3px solid #f43f5e;">
                         <div class="kpi-icon" style="background:rgba(244,63,94,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-                        <div class="kpi-label">Days Absent</div><div class="kpi-value" style="color:#fb7185;">${days.length - active.length}</div><div class="kpi-sublabel">Missed school days this week</div>
+                        <div class="kpi-label">Days Absent</div><div class="kpi-value" style="color:#fb7185;">${days.length - active.length}</div><div class="kpi-sublabel">Your child missed ${days.length - active.length} school day(s) this week</div>
                     </div>
                     <div class="kpi-card border-orange">
                         <div class="kpi-icon" style="background:rgba(245,158,11,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v6"/><path d="M8 22h8"/><path d="M12 18h0"/><circle cx="12" cy="18" r="2"/></svg></div>
-                        <div class="kpi-label">Total Water Bottles</div><div class="kpi-value accent-orange">${bottleTotal + active.length}</div><div class="kpi-sublabel">${active.length} from home + ${bottleTotal} refilled</div>
+                        <div class="kpi-label">Total Water Bottles</div><div class="kpi-value accent-orange">${bottleTotal + active.length}</div><div class="kpi-sublabel">${active.length} brought from home + ${bottleTotal} refilled at school</div>
                     </div>
                 </div>
             `;
