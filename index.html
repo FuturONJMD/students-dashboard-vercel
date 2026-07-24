@@ -212,21 +212,97 @@
         .pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(30,64,175,0.4); background: #1d4ed8; }
         .pdf-btn svg { flex-shrink: 0; }
 
-        /* Print styles */
+        /* Print / PDF styles - optimized for readability */
         @media print {
-            .sidebar, .pdf-btn { display: none !important; }
-            .main { margin-left: 0 !important; padding: 0.5rem !important; }
-            body { background: #fff !important; color: #1e293b !important; }
-            .greeting-card, .kpi-card, .student-progress, .day-table, .ai-card, .school-banner, .student-profile-card, .health-card { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1e293b !important; }
-            .kpi-value, .day-cell-pct, .greeting-title, .student-name, .snap-value, .school-name { color: #0f172a !important; }
-            .kpi-label, .kpi-sublabel, .greeting-subtitle, .snap-label, .snap-time, .day-cell-time { color: #475569 !important; }
-            .section-header, .nav-category { color: #334155 !important; }
-            .health-value { color: #059669 !important; }
-            .bar-track, .pct-bar, .snap-bar, .ai-pred-bar { background: #e2e8f0 !important; }
-            .footer { border-color: #e2e8f0 !important; }
-            .footer p { color: #64748b !important; }
-            .ai-tip-text, .ai-summary-text { color: #334155 !important; }
+            .sidebar, .pdf-btn, .mobile-nav { display: none !important; }
+            .main { margin-left: 0 !important; padding: 1rem !important; max-width: 100% !important; }
+            body { background: #ffffff !important; color: #1a1a1a !important; font-size: 11pt !important; line-height: 1.6 !important; }
+            
+            /* Cards and containers */
+            .school-banner, .greeting-card, .kpi-card, .student-progress, .day-table, .ai-card, .student-profile-card, .health-card {
+                background: #ffffff !important; border: 1.5px solid #d1d5db !important; color: #1a1a1a !important; box-shadow: none !important;
+            }
+            .school-banner { padding: 12px !important; }
+            .school-banner::before { display: none !important; }
+            .kpi-card::before { display: none !important; }
+            
+            /* Typography - high contrast for print */
+            .school-name { color: #000000 !important; font-size: 14pt !important; }
+            .school-address { color: #333333 !important; font-size: 8pt !important; }
+            .school-badge-class { color: #b45309 !important; background: #fef3c7 !important; border-color: #d97706 !important; font-size: 9pt !important; }
+            .kpi-value { color: #000000 !important; font-size: 20pt !important; }
+            .kpi-label { color: #374151 !important; font-size: 8pt !important; }
+            .kpi-sublabel { color: #4b5563 !important; font-size: 8pt !important; }
+            .greeting-title { color: #000000 !important; font-size: 13pt !important; }
+            .greeting-subtitle { color: #374151 !important; font-size: 9pt !important; }
+            .student-name { color: #000000 !important; }
+            .student-overall { color: #374151 !important; }
+            .health-value { color: #047857 !important; font-size: 20pt !important; }
+            .health-label { color: #374151 !important; font-size: 8pt !important; }
+            .section-header { color: #1f2937 !important; font-size: 9pt !important; font-weight: 700 !important; border-bottom: 1px solid #d1d5db !important; padding-bottom: 4px !important; }
+            
+            /* Daily snapshot */
+            .snap-day { color: #1e40af !important; font-size: 9pt !important; }
+            .snap-time { color: #4b5563 !important; font-size: 8pt !important; }
+            .snap-value { color: #1a1a1a !important; font-size: 9pt !important; }
+            .snap-bar { background: #e5e7eb !important; }
+            .snap-bar-fill { opacity: 1 !important; }
+            
+            /* Progress bars */
+            .bar-track { background: #e5e7eb !important; }
+            .bar-fill { opacity: 1 !important; }
+            .bar-label { color: #374151 !important; font-size: 7pt !important; }
+            .pct-bar { background: #e5e7eb !important; }
+            
+            /* AI Insights */
+            .ai-card-header { color: #000000 !important; font-size: 10pt !important; border-bottom-color: #d1d5db !important; }
+            .ai-tip-text { color: #1f2937 !important; font-size: 9pt !important; }
+            .ai-summary-text { color: #1f2937 !important; font-size: 9pt !important; }
+            .ai-severity-critical { border-left-color: #dc2626 !important; }
+            .ai-severity-warning { border-left-color: #d97706 !important; }
+            .ai-severity-positive { border-left-color: #059669 !important; }
+            .ai-severity-info { border-left-color: #2563eb !important; }
+            .ai-rec { border-color: #d1d5db !important; background: #f9fafb !important; }
+            .ai-badge { font-size: 7pt !important; }
+            
+            /* Badges */
+            .badge { border: 1px solid #9ca3af !important; font-size: 7pt !important; }
+            .badge-green { background: #d1fae5 !important; color: #065f46 !important; border-color: #6ee7b7 !important; }
+            .badge-yellow { background: #fef3c7 !important; color: #92400e !important; border-color: #fbbf24 !important; }
+            .badge-purple { background: #ede9fe !important; color: #5b21b6 !important; border-color: #a78bfa !important; }
+            
+            /* Footer */
+            .footer { border-top: 1px solid #d1d5db !important; margin-top: 1.5rem !important; padding-top: 1rem !important; }
+            .footer p { color: #374151 !important; font-size: 8pt !important; }
+            .footer a { color: #1e40af !important; text-decoration: none !important; background: none !important; border: none !important; padding: 0 !important; font-size: 8pt !important; }
+            
+            /* Vision and Core Values */
+            [style*="color:#60a5fa"] { color: #1e40af !important; }
+            [style*="color:#fbbf24"] { color: #b45309 !important; }
+            [style*="color:#cbd5e1"] { color: #374151 !important; }
+            [style*="color:#f59e0b"] { color: #b45309 !important; }
+            [style*="background:rgba(59,130,246,0.05)"] { background: #eff6ff !important; border-color: #93c5fd !important; }
+            [style*="background:rgba(245,158,11,0.05)"] { background: #fffbeb !important; border-color: #fbbf24 !important; }
+            [style*="background:rgba(245,158,11,0.1)"] { background: #fef3c7 !important; }
+            
+            /* KPI accent colors for print */
+            .accent-purple { color: #6d28d9 !important; }
+            .accent-green { color: #047857 !important; }
+            .accent-blue { color: #1d4ed8 !important; }
+            .accent-orange { color: #b45309 !important; }
+            
+            /* Page layout */
+            .header { gap: 0.6rem !important; }
+            .kpi-grid { gap: 0.6rem !important; }
+            .progress-line { display: none !important; }
+            
+            /* Ensure color printing */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            /* Page breaks */
+            .ai-card { break-inside: avoid !important; }
+            .kpi-grid { break-inside: avoid !important; }
+            .student-progress { break-inside: avoid !important; }
         }
 
         /* Mobile responsive */
