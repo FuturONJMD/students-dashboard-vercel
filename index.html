@@ -416,28 +416,6 @@
             });
             html += `</div>`;
 
-            // AI Insights - Predictions
-            const preds = AIEngine.generatePredictions(selectedStudent);
-            html += `<div class="ai-card">
-                <div class="ai-card-header"><span style="font-size:1.2rem;">🔮</span> NEXT WEEK PREDICTIONS</div>`;
-            const predItems = [
-                { label: 'Snacks', data: preds.snack, color: '#8b5cf6' },
-                { label: 'Lunch', data: preds.lunch, color: '#10b981' },
-                { label: 'Water', data: preds.water, color: '#3b82f6' },
-                { label: 'Attendance', data: preds.attendance, color: '#f59e0b' }
-            ];
-            predItems.forEach(p => {
-                const predicted = p.data.predicted !== null ? p.data.predicted : '—';
-                const arrow = p.data.arrow || '→';
-                const barColor = p.data.color || '#6b7280';
-                html += `<div class="ai-prediction-row">
-                    <div class="ai-pred-label">${p.label}</div>
-                    <div><div class="ai-pred-bar"><div class="ai-pred-fill" style="width:${predicted}%; background:${p.color};"></div></div></div>
-                    <div class="ai-pred-value" style="color:${barColor}">${arrow} ${predicted}%</div>
-                </div>`;
-            });
-            html += `<div style="font-size:0.7rem; color:#6b7280; margin-top:0.8rem; padding-top:0.5rem; border-top:1px solid #1f2937;">Predictions based on week-over-week trend analysis.</div></div>`;
-
             // AI Insights - Anomaly Detection
             const anomalies = AIEngine.detectAnomalies(selectedStudent, selectedWeekIdx);
             html += `<div class="ai-card">
