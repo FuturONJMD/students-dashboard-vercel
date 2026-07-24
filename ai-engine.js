@@ -363,7 +363,7 @@ const AIEngine = {
         });
 
         if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${name} was away for ${maxConsecutive} consecutive days this week. They missed classes, 3L skills, activities, dramatics, fun & games, and more — consistent attendance helps them stay connected.`, type: 'attendance' });
-        else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} was away for 2 days in a row. Consistent attendance helps them stay engaged.`, type: 'attendance' });
+        else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} was away for 2 days in a row this week. We missed them! Consistent attendance helps your child stay connected with classmates and enjoy all school activities.`, type: 'attendance' });
 
         if (!active.length) return anomalies;
 
@@ -377,7 +377,7 @@ const AIEngine = {
         // Late arrival pattern
         const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
         if (arrivalPattern && arrivalPattern.lateCount >= 3) {
-            anomalies.push({ severity: 'warning', icon: '🟠', text: `Late arrival pattern: ${arrivalPattern.lateCount} out of ${active.length} days arrived after 9:05 AM. Average arrival: ${arrivalPattern.average}. School time is 9:00 AM.`, type: 'punctuality' });
+            anomalies.push({ severity: 'warning', icon: '🟠', text: `${name} arrived after 9:05 AM on ${arrivalPattern.lateCount} out of ${active.length} days this week (average arrival: ${arrivalPattern.average}). Our school day begins at 9:00 AM with morning prayers, exercise, and yoga — arriving on time helps your child start the day with energy and focus!`, type: 'punctuality' });
         }
 
         // Week-over-week drops
@@ -389,12 +389,12 @@ const AIEngine = {
                 metrics.forEach((m, i) => {
                     const curr = this.avg(active, m);
                     const prev = this.avg(prevActive, m);
-                    if (prev - curr > 30) anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} went down significantly — ${Math.round(prev - curr)}% lower than last week (${Math.round(prev)}% → ${Math.round(curr)}%).`, type: 'trend' });
-                    else if (prev - curr > 20) anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} completion dropped ${Math.round(prev - curr)}% from last week.`, type: 'trend' });
+                    if (prev - curr > 30) anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} intake went down significantly — from ${Math.round(prev)}% last week to ${Math.round(curr)}% this week. Sometimes children go through phases — trying new options or smaller portions may help.`, type: 'trend' });
+                    else if (prev - curr > 20) anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} intake was ${Math.round(prev - curr)}% lower compared to last week. A small change in routine or menu could help bring it back up!`, type: 'trend' });
                 });
 
                 const prevAttendance = prevActive.length;
-                if (prevAttendance - active.length >= 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `Attendance dropped by ${prevAttendance - active.length} days compared to last week.`, type: 'attendance' });
+                if (prevAttendance - active.length >= 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} attended ${prevAttendance - active.length} fewer days compared to last week. Regular attendance helps your child build friendships and stay on track with learning.`, type: 'attendance' });
             }
         }
 
@@ -402,7 +402,7 @@ const AIEngine = {
         const checkStreak = (metric, label) => {
             let lowStreak = 0;
             active.forEach(d => { if (this.pct(d[metric]) < 50 && this.pct(d[metric]) > 0) lowStreak++; });
-            if (lowStreak >= 3) anomalies.push({ severity: 'warning', icon: '🟠', text: `${label} has been below 50% for ${lowStreak} days this week — this might be worth looking into.`, type: 'pattern' });
+            if (lowStreak >= 3) anomalies.push({ severity: 'warning', icon: '🟠', text: `${label} intake was below 50% on ${lowStreak} days this week. Your child may benefit from trying different options — even small changes can make a difference!`, type: 'pattern' });
         };
         checkStreak('snack_completion', 'Snacks');
         checkStreak('lunch_completion', 'Lunch');
@@ -411,7 +411,7 @@ const AIEngine = {
         // Variance anomaly (wildly inconsistent within the week)
         const snackValues = active.map(d => this.pct(d.snack_completion));
         if (snackValues.length >= 3 && this.variance(snackValues) > 1500) {
-            anomalies.push({ severity: 'info', icon: '📊', text: `Snack eating varied a lot this week (from ${Math.min(...snackValues)}% to ${Math.max(...snackValues)}%). Some days were much better than others.`, type: 'pattern' });
+            anomalies.push({ severity: 'info', icon: '📊', text: `${name}'s snack eating varied quite a bit this week (from ${Math.min(...snackValues)}% to ${Math.max(...snackValues)}%). Some days were much better than others — it helps to note which snacks work best!`, type: 'pattern' });
         }
 
         return anomalies;
