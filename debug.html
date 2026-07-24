@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head><title>Data Debug - VEDANSHI Week 4</title>
+<style>body{background:#111;color:#eee;font-family:monospace;padding:2rem;}
+table{border-collapse:collapse;margin:1rem 0;width:100%;}
+td,th{border:1px solid #444;padding:8px;text-align:left;font-size:0.8rem;}
+th{background:#222;}
+.source{padding:4px 10px;border-radius:4px;display:inline-block;margin:4px;font-weight:bold;}
+.ok{background:#059669;} .fail{background:#dc2626;}
+</style>
+</head>
+<body>
+<h2>VEDANSHI - 4TH WEEK Data Debug</h2>
+<div id="status">Loading...</div>
+<div id="output"></div>
+
+<script>
+const SHEET_ID = '1s8hz-qQEOk2UhGe2UAOx5MjVs-sSFs0s99vsgeXPyM0';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLmJQA7DDGayA24sASh8dzIDu8aTr9tLgtBhQKcP5RHpaxWdngJ432upX5ndnDiVq8cQ/exec';
+
+let statusEl = document.getElementById('status');
+let outputEl = document.getElementById('output');
+
+// Try Apps Script
+async function tryAppsScript() {
+    try {
+        const url = APPS_SCRIPT_URL + '?sheet=VEDANSHI&_=' + Date.now();
+        const resp = await fetch(url);
+        const data = await resp.json();
+        return { source: 'Apps Script', success: true, data: data };
+    } catch(e) {
+        return { source: 'Apps Script', success: false, error: e.message };
+    }
+}
+
+// Try JSONP
+function tryJSONP() {
+    return new Promise((resolve) => {
+        const cb = 'debug_' + Date.now();
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cb}&sheet=VEDANSHI&headers=0&_=${Date.now()}`;
+        
+        window[cb] = function(response) {
+            delete window[cb];
+            document.getElementById(cb)?.remove();
+            if (response && response.table) {
+                // Extract rows with formatted values
+                const rows = [];
+                for (const row of response.table.rows) {
+                    const cells = [];
+                    if (row.c) {
+                        for (const cell of row.c) {
+                            if (!cell || cell.v == null) cells.push('');
+                            else if (cell.f) cells.push(cell.f);
+                            else cells.push(String(cell.v));
+                        }
+                    }
+                    rows.push(cells);
+                }
+                resolve({ source: 'JSONP (gviz)', success: true, data: rows, sig: response.sig });
+            } else {
+                resolve({ source: 'JSONP (gviz)', success: false, error: 'No table' });
+            }
+        };
+        
+        const script = document.createElement('script');
+        script.id = cb;
+        script.src = url;
+        script.onerror = () => { resolve({ source: 'JSONP (gviz)', success: false, error: 'Script failed' }); };
+        document.body.appendChild(script);
+        
+        setTimeout(() => resolve({ source: 'JSONP (gviz)', success: false, error: 'Timeout' }), 10000);
+    });
+}
+
+function renderTable(rows, title) {
+    let html = `<h3>${title}</h3><table><tr><th>#</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th></tr>`;
+    rows.forEach((row, i) => {
+        html += `<tr><td>${i}</td>`;
+        for (let c = 0; c < 10; c++) {
+            const val = Array.isArray(row) ? (row[c] || '') : '';
+            html += `<td>${val}</td>`;
+        }
+        html += `</tr>`;
+    });
+    html += `</table>`;
+    return html;
+}
+
+async function run() {
+    let html = '';
+    
+    // Test Apps Script
+    const apps = await tryAppsScript();
+    html += `<span class="source ${apps.success ? 'ok' : 'fail'}">${apps.source}: ${apps.success ? 'SUCCESS' : 'FAILED - ' + apps.error}</span>`;
+    if (apps.success && Array.isArray(apps.data)) {
+        html += renderTable(apps.data, 'Apps Script Raw Data (ALL ROWS)');
+    } else if (apps.success) {
+        html += `<pre>${JSON.stringify(apps.data, null, 2).substring(0, 3000)}</pre>`;
+    }
+    
+    // Test JSONP
+    const jsonp = await tryJSONP();
+    html += `<br><span class="source ${jsonp.success ? 'ok' : 'fail'}">${jsonp.source}: ${jsonp.success ? 'SUCCESS (sig: ' + jsonp.sig + ')' : 'FAILED - ' + jsonp.error}</span>`;
+    if (jsonp.success) {
+        // Find 4th week rows
+        let week4Start = -1;
+        for (let i = 0; i < jsonp.data.length; i++) {
+            if (jsonp.data[i].join(' ').toUpperCase().includes('4TH') && jsonp.data[i].join(' ').toUpperCase().includes('WEEK')) {
+                week4Start = i;
+                break;
+            }
+        }
+        if (week4Start >= 0) {
+            const week4Rows = jsonp.data.slice(week4Start, week4Start + 8);
+            html += renderTable(week4Rows, 'JSONP - 4TH WEEK ROWS (from row ' + week4Start + ')');
+        }
+        html += renderTable(jsonp.data, 'JSONP - ALL ROWS');
+    }
+    
+    statusEl.textContent = 'Done. Check results below:';
+    outputEl.innerHTML = html;
+}
+
+run();
+</script>
+</body>
+</html>
