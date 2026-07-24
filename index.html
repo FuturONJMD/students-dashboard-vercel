@@ -310,19 +310,19 @@
                 <div class="kpi-grid">
                     <div class="kpi-card border-purple">
                         <div class="kpi-icon" style="background:rgba(139,92,246,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
-                        <div class="kpi-label">Snack Completion</div><div class="kpi-value accent-purple">${Math.round(snackAvg)}%</div><div class="kpi-sublabel">Average across week</div>
+                        <div class="kpi-label">Snack Eaten</div><div class="kpi-value accent-purple">${Math.round(snackAvg)}%</div><div class="kpi-sublabel">How much snack your child finished</div>
                     </div>
                     <div class="kpi-card border-green">
                         <div class="kpi-icon" style="background:rgba(16,185,129,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3"/><path d="M18 22V7"/></svg></div>
-                        <div class="kpi-label">Lunch Completion</div><div class="kpi-value accent-green">${Math.round(lunchAvg)}%</div><div class="kpi-sublabel">Average across week</div>
+                        <div class="kpi-label">Lunch Eaten</div><div class="kpi-value accent-green">${Math.round(lunchAvg)}%</div><div class="kpi-sublabel">How much lunch your child finished</div>
                     </div>
                     <div class="kpi-card border-blue">
                         <div class="kpi-icon" style="background:rgba(59,130,246,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg></div>
-                        <div class="kpi-label">Water Intake</div><div class="kpi-value accent-blue">${Math.round(waterAvg)}%</div><div class="kpi-sublabel">Hydration score</div>
+                        <div class="kpi-label">Water Drinking</div><div class="kpi-value accent-blue">${Math.round(waterAvg)}%</div><div class="kpi-sublabel">How well your child stayed hydrated</div>
                     </div>
                     <div class="kpi-card border-orange">
                         <div class="kpi-icon" style="background:rgba(245,158,11,0.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v6"/><path d="M8 22h8"/><path d="M12 18h0"/><circle cx="12" cy="18" r="2"/></svg></div>
-                        <div class="kpi-label">Bottles Refilled</div><div class="kpi-value accent-orange">${bottleTotal}</div><div class="kpi-sublabel">Total for the week</div>
+                        <div class="kpi-label">Total Water Bottles</div><div class="kpi-value accent-orange">${bottleTotal + active.length}</div><div class="kpi-sublabel">${active.length} brought from home + ${bottleTotal} refilled at school</div>
                     </div>
                 </div>
             `;
