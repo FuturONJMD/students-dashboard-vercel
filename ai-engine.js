@@ -192,7 +192,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            tips.push({ icon: '⚠️', text: `${name} was not present this week. Each school day includes prayers, exercise, yoga, classes, activities, dramatics, and 3L skills. Regular attendance helps your child enjoy all these experiences.`, severity: 'critical' });
+            tips.push({ icon: '⚠️', text: `${name} was not present this week. Each day at school includes classes, 3L skills, activities, dramatics, fun & games, and many more engaging experiences. We missed ${name} and hope to see them back soon!`, severity: 'critical' });
             return tips;
         }
 
@@ -236,8 +236,8 @@ const AIEngine = {
 
         // Attendance
         if (attendance === 6) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all 6 days. Consistency builds great habits.`, severity: 'positive' });
-        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of 6 days present.`, severity: 'info' });
-        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Each day at school includes classes, activities, dramatics, and 3L skills — consistent attendance helps your child get the most out of these experiences.`, severity: 'warning' });
+        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week (${attendance} out of 6 days present). That day included classes, 3L skills, activities, and fun & games — looking forward to full attendance next week!`, severity: 'info' });
+        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Each day at school includes classes, 3L skills, activities, dramatics, fun & games, and many more engaging experiences — consistent attendance helps your child enjoy all of them!`, severity: 'warning' });
 
         // Arrival time insight
         const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
@@ -278,7 +278,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            return `${name} was not present during ${currentWeek.label}. No activity data is available for this week. Once ${name} returns, daily updates will resume here.`;
+            return `${name} was not present during ${currentWeek.label}. No activity data is available for this week. Each school day includes classes, 3L skills, activities, dramatics, fun & games, and many more engaging experiences. Once ${name} returns, daily updates will resume here.`;
         }
 
         const snackAvg = Math.round(this.avg(active, 'snack_completion'));
@@ -362,7 +362,7 @@ const AIEngine = {
             else { consecutiveAbsent = 0; }
         });
 
-        if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${name} was away for ${maxConsecutive} consecutive days this week.`, type: 'attendance' });
+        if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${name} was away for ${maxConsecutive} consecutive days this week. They missed classes, 3L skills, activities, dramatics, fun & games, and more — consistent attendance helps them stay connected.`, type: 'attendance' });
         else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} was away for 2 days in a row. Consistent attendance helps them stay engaged.`, type: 'attendance' });
 
         if (!active.length) return anomalies;
