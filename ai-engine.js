@@ -257,16 +257,7 @@ const AIEngine = {
             }
         }
 
-        // Trend forecast
-        const forecast = this.forecastNextWeek(studentName);
-        if (forecast && weekIdx === weeks.length - 1) {
-            const snackTrend = forecast.snack_completion;
-            if (snackTrend.direction === 'declining') {
-                tips.push({ icon: '📉', text: `Trend alert: Snack completion has been declining (${snackTrend.slope}% per week). Next week forecast: ${snackTrend.predicted}%. Consider changing snack variety.`, severity: 'warning' });
-            } else if (snackTrend.direction === 'improving') {
-                tips.push({ icon: '📈', text: `Positive trend: Meal completion is improving (+${snackTrend.slope}% per week). Current strategy is working!`, severity: 'positive' });
-            }
-        }
+
 
         // Uniform compliance
         const nonUniformDays = active.filter(d => d.uniform === 'NO').length;
