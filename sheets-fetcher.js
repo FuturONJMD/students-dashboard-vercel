@@ -176,11 +176,22 @@ async function loadData() {
         if (Object.keys(liveData).length > 0) {
             studentsData = liveData;
             console.log('Live data loaded from Google Sheets:', Object.keys(studentsData).join(', '));
+            // Show live data status
+            const badge = document.createElement('div');
+            badge.style.cssText = 'position:fixed;bottom:10px;left:10px;background:#10b981;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;z-index:9999;opacity:0.8;';
+            badge.textContent = '✓ Live data (' + Object.keys(liveData).length + ' students, ' + (liveData[Object.keys(liveData)[0]]?.length || 0) + ' weeks)';
+            document.body.appendChild(badge);
+            setTimeout(() => badge.remove(), 5000);
         } else {
             console.warn('No data from Google Sheets, using fallback');
         }
     } catch (err) {
         console.warn('Failed to fetch from Google Sheets, using fallback data:', err.message);
+        // Show error status
+        const badge = document.createElement('div');
+        badge.style.cssText = 'position:fixed;bottom:10px;left:10px;background:#ef4444;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;z-index:9999;';
+        badge.textContent = '✗ Live data failed: ' + err.message;
+        document.body.appendChild(badge);
     }
     renderApp();
 }
