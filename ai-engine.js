@@ -192,7 +192,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            tips.push({ icon: '⚠️', text: `${name} was absent the entire week. Please ensure regular attendance for better learning.`, severity: 'critical' });
+            tips.push({ icon: '⚠️', text: `${name} was not present this week. Regular attendance helps children feel connected and build routines.`, severity: 'critical' });
             return tips;
         }
 
@@ -214,7 +214,7 @@ const AIEngine = {
 
         // Consistency score insight
         const consistency = this.calculateConsistencyScore(studentName, weekIdx);
-        tips.push({ icon: '📊', text: `${name}'s weekly consistency score: ${consistency.score}/100 (Grade: ${consistency.grade}). ${consistency.score >= 80 ? 'Excellent routine!' : consistency.score >= 60 ? 'Good routine with room for improvement.' : 'Building better habits would help significantly.'}`, severity: consistency.score >= 80 ? 'positive' : consistency.score >= 60 ? 'info' : 'warning' });
+        tips.push({ icon: '📊', text: `${name}'s weekly consistency score: ${consistency.score}/100 (Grade: ${consistency.grade}). ${consistency.score >= 80 ? 'Excellent routine!' : consistency.score >= 60 ? 'Good routine with room for improvement.' : 'Small routine changes at home can make a big difference.'}`, severity: consistency.score >= 80 ? 'positive' : consistency.score >= 60 ? 'info' : 'warning' });
 
         // Snack tips
         if (snackAvg >= 90) tips.push({ icon: '⭐', text: `${name} is eating snacks very well (${snackAvg}%). Keep sending the same type of snacks!`, severity: 'positive' });
@@ -226,18 +226,18 @@ const AIEngine = {
         if (lunchAvg >= 90) tips.push({ icon: '⭐', text: `${name} is finishing lunch very well (${lunchAvg}%). Great appetite at school!`, severity: 'positive' });
         else if (lunchAvg >= 70) tips.push({ icon: '🍽️', text: `${name} eats ${lunchAvg}% of lunch. Good, but can improve with preferred menu items.`, severity: 'info' });
         else if (lunchAvg >= 50) tips.push({ icon: '🍽️', text: `${name} only finishes ${lunchAvg}% of lunch. Try sending lighter or favourite meals.`, severity: 'warning' });
-        else tips.push({ icon: '🍽️', text: `${name} is eating very less lunch (${lunchAvg}%). Please discuss with teacher about food preferences.`, severity: 'critical' });
+        else tips.push({ icon: '🍽️', text: `${name} is eating very less lunch (${lunchAvg}%). You might want to try different meal options or smaller portions.`, severity: 'critical' });
 
         // Water tips with monthly context
         if (waterAvg >= 90) tips.push({ icon: '💧', text: `${name} drinks water very well (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} days. Keep it up!`, severity: 'positive' });
         else if (waterAvg >= 70) tips.push({ icon: '💧', text: `${name} drinks ${waterAvg}% of required water. This week: ${Math.round(weekBottles)} bottles (monthly: ${Math.round(monthlyBottles)}). Remind to drink more often.`, severity: 'info' });
         else if (waterAvg >= 50) tips.push({ icon: '💧', text: `${name} water intake is moderate (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Send a bigger bottle or add flavoured water.`, severity: 'warning' });
-        else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). Only ${Math.round(weekBottles)} bottles this week. This needs immediate attention.`, severity: 'critical' });
+        else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). Only ${Math.round(weekBottles)} bottles this week. Encouraging water breaks at home can help build the habit.`, severity: 'critical' });
 
         // Attendance
         if (attendance === 6) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all 6 days. Consistency builds great habits.`, severity: 'positive' });
         else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of 6 days present.`, severity: 'info' });
-        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was absent ${absentDays} days this week. Regular attendance is important for learning.`, severity: 'warning' });
+        else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Consistent attendance helps them stay in rhythm with friends and activities.`, severity: 'warning' });
 
         // Arrival time insight
         const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
@@ -278,7 +278,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            return `${name} was not present during ${currentWeek.label}. No activity data is available for this week. We look forward to welcoming ${name} back and having a wonderful time together!`;
+            return `${name} was not present during ${currentWeek.label}. No activity data is available for this week. Once ${name} returns, daily updates will resume here.`;
         }
 
         const snackAvg = Math.round(this.avg(active, 'snack_completion'));
@@ -305,7 +305,7 @@ const AIEngine = {
         if (overall >= 90) summary += `Your child did excellent this week with ${overall}% overall performance. `;
         else if (overall >= 70) summary += `Your child did well this week with ${overall}% overall performance. `;
         else if (overall >= 50) summary += `Performance was moderate at ${overall}% — there is room for improvement. `;
-        else summary += `Performance needs attention with only ${overall}% average. Please discuss with the teacher. `;
+        else summary += `Performance needs attention with only ${overall}% average. Focusing on the areas mentioned below can help improve. `;
 
         // Consistency grade
         summary += `Consistency Grade: ${consistency.grade} (${consistency.score}/100). `;
@@ -332,7 +332,7 @@ const AIEngine = {
             if (prevActive.length) {
                 const prevOverall = Math.round((this.avg(prevActive, 'snack_completion') + this.avg(prevActive, 'lunch_completion') + this.avg(prevActive, 'water_completion')) / 3);
                 if (overall > prevOverall + 5) summary += `This is an improvement of ${overall - prevOverall}% from the previous week!`;
-                else if (prevOverall > overall + 5) summary += `This is a ${prevOverall - overall}% decline from the previous week — let's work on getting back on track.`;
+                else if (prevOverall > overall + 5) summary += `This is a ${prevOverall - overall}% decline from the previous week. The areas flagged below can help focus improvement.`;
                 else summary += `Performance is consistent with the previous week.`;
             }
         }
@@ -362,16 +362,16 @@ const AIEngine = {
             else { consecutiveAbsent = 0; }
         });
 
-        if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${maxConsecutive} consecutive absent days detected. Possible health or family issue.`, type: 'attendance' });
-        else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `2 consecutive absent days. Monitor attendance pattern.`, type: 'attendance' });
+        if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${name} was away for ${maxConsecutive} consecutive days this week.`, type: 'attendance' });
+        else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} was away for 2 days in a row. Consistent attendance helps them stay engaged.`, type: 'attendance' });
 
         if (!active.length) return anomalies;
 
         // Sudden daily drops (present but 0%)
         active.forEach(d => {
-            if (this.pct(d.snack_completion) === 0 && d.snacks !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% snack completion. Possible food refusal or illness.`, type: 'metric' });
-            if (this.pct(d.lunch_completion) === 0 && d.lunch !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% lunch completion. Check appetite/preferences.`, type: 'metric' });
-            if (this.pct(d.water_completion) === 0) anomalies.push({ severity: 'critical', icon: '🔴', text: `${d.day}: Zero water intake while present. Health concern.`, type: 'health' });
+            if (this.pct(d.snack_completion) === 0 && d.snacks !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: ${name} didn't eat any snack even though it was provided. They may not have been in the mood for it.`, type: 'metric' });
+            if (this.pct(d.lunch_completion) === 0 && d.lunch !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: ${name} didn't eat lunch. Their preferences may be changing — trying different options could help.`, type: 'metric' });
+            if (this.pct(d.water_completion) === 0) anomalies.push({ severity: 'critical', icon: '🔴', text: `${d.day}: ${name} didn't drink any water. Encouraging water breaks at home can help build this habit.`, type: 'health' });
         });
 
         // Late arrival pattern
@@ -389,7 +389,7 @@ const AIEngine = {
                 metrics.forEach((m, i) => {
                     const curr = this.avg(active, m);
                     const prev = this.avg(prevActive, m);
-                    if (prev - curr > 30) anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} completion crashed ${Math.round(prev - curr)}% from last week (${Math.round(prev)}% → ${Math.round(curr)}%).`, type: 'trend' });
+                    if (prev - curr > 30) anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} went down significantly — ${Math.round(prev - curr)}% lower than last week (${Math.round(prev)}% → ${Math.round(curr)}%).`, type: 'trend' });
                     else if (prev - curr > 20) anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} completion dropped ${Math.round(prev - curr)}% from last week.`, type: 'trend' });
                 });
 
@@ -402,7 +402,7 @@ const AIEngine = {
         const checkStreak = (metric, label) => {
             let lowStreak = 0;
             active.forEach(d => { if (this.pct(d[metric]) < 50 && this.pct(d[metric]) > 0) lowStreak++; });
-            if (lowStreak >= 3) anomalies.push({ severity: 'warning', icon: '🟠', text: `${label}: Below 50% for ${lowStreak} days this week — persistent low pattern detected.`, type: 'pattern' });
+            if (lowStreak >= 3) anomalies.push({ severity: 'warning', icon: '🟠', text: `${label} has been below 50% for ${lowStreak} days this week — this might be worth looking into.`, type: 'pattern' });
         };
         checkStreak('snack_completion', 'Snacks');
         checkStreak('lunch_completion', 'Lunch');
@@ -411,7 +411,7 @@ const AIEngine = {
         // Variance anomaly (wildly inconsistent within the week)
         const snackValues = active.map(d => this.pct(d.snack_completion));
         if (snackValues.length >= 3 && this.variance(snackValues) > 1500) {
-            anomalies.push({ severity: 'info', icon: '📊', text: `High variability in snack completion (ranges from ${Math.min(...snackValues)}% to ${Math.max(...snackValues)}%). Inconsistent eating pattern.`, type: 'pattern' });
+            anomalies.push({ severity: 'info', icon: '📊', text: `Snack eating varied a lot this week (from ${Math.min(...snackValues)}% to ${Math.max(...snackValues)}%). Some days were much better than others.`, type: 'pattern' });
         }
 
         return anomalies;
