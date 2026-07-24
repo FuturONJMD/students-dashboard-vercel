@@ -225,7 +225,7 @@
             const weeks = studentsData[selectedStudent];
             let html = `
                 <div class="logo">
-                    <div class="logo-icon">F</div>
+                    <img src="images/school-logo.jpg" alt="FuturON" class="logo-icon" style="object-fit:cover;">
                     <div><div class="logo-text">FuturON Preschool</div><div class="logo-sub">${isParentView ? 'Parent Portal' : 'Student Dashboard'}</div></div>
                 </div>
             `;
@@ -264,7 +264,7 @@
             let html = `
                 <div style="background:linear-gradient(135deg,#1a1040,#0d1117); border:1px solid #2d1b69; border-radius:12px; padding:0.8rem 1.5rem; margin-bottom:1.2rem; display:flex; align-items:center; justify-content:space-between;">
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:42px; height:42px; background:#6C63FF; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:1.1rem;">F</div>
+                        <img src="images/school-logo.jpg" alt="FuturON" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
                         <div>
                             <div style="font-size:1rem; font-weight:700; color:#fff;">FuturON Preschool</div>
                             <div style="font-size:0.7rem; color:#9ca3af;">Near SBI Bank, Tadipatri Road, Jammalamadugu</div>
@@ -293,10 +293,13 @@
 
             html += `
                 <div class="header">
-                    <div class="greeting-card">
-                        <div class="greeting-title">${greeting}, ${selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase()}</div>
-                        <div class="greeting-subtitle">Week report: ${week.date_range || ''} | ${week.label}</div>
-                        <div class="progress-line"></div>
+                    <div class="greeting-card" style="display:flex; align-items:center; gap:12px;">
+                        <img src="images/${selectedStudent}.jpg" alt="${selectedStudent}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #6C63FF;" onerror="this.style.display='none'">
+                        <div>
+                            <div class="greeting-title">${greeting}, ${selectedStudent.charAt(0) + selectedStudent.slice(1).toLowerCase()}</div>
+                            <div class="greeting-subtitle">Week report: ${week.date_range || ''} | ${week.label}</div>
+                            <div class="progress-line"></div>
+                        </div>
                     </div>
                     <div class="health-card">
                         <div class="health-value">${attendancePct}</div>
