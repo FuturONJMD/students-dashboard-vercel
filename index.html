@@ -2,10 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FuturON">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="FuturON Preschool - Student Daily Updates Dashboard">
+    <meta name="format-detection" content="telephone=yes">
+    <link rel="apple-touch-icon" href="images/school-logo.jpg">
     <title>FuturON Preschool - Student Daily Updates</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -230,7 +238,30 @@
             .student-profile-card { flex-direction: row; padding: 1rem; gap: 14px; }
             .health-card { flex-direction: row; gap: 12px; padding: 1rem 1.2rem; }
             .health-value { font-size: 1.8rem; }
+            .kpi-value { font-size: 1.7rem; }
+            .kpi-card { padding: 1.2rem 0.8rem; }
+            .ai-card { padding: 1rem; }
+            .greeting-title { font-size: 1.1rem; }
+            .footer p { font-size: 0.65rem; }
         }
+        @media (max-width: 380px) {
+            .main { padding: 0.7rem; }
+            .kpi-grid { grid-template-columns: 1fr; }
+            .school-banner-left { gap: 10px; }
+            .school-logo { width: 40px; height: 40px; }
+            .school-name { font-size: 0.9rem; }
+            .kpi-value { font-size: 1.5rem; }
+            .student-avatar { width: 70px; height: 70px; }
+            .student-avatar-placeholder { width: 70px; height: 70px; font-size: 1.5rem; }
+        }
+        /* iOS safe area padding */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .main { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+            .pdf-btn { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+        }
+        /* Ensure touch targets are large enough (44px min for iOS) */
+        .nav-item { min-height: 44px; display: flex; align-items: center; }
+        .mobile-nav select { min-height: 44px; }
         .mobile-nav { display: none; gap: 8px; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
         .mobile-nav select { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 0.55rem 0.9rem; font-size: 0.78rem; appearance: auto; flex: 1; min-width: 0; font-family: inherit; }
 
