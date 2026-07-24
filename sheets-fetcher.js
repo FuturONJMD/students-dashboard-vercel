@@ -39,7 +39,7 @@ function formatArrivalTime(val) {
 function fetchSheetJSON(sheetName) {
     return new Promise((resolve, reject) => {
         const callbackName = 'sheetCallback_' + sheetName + '_' + Date.now();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${callbackName}&sheet=${sheetName}&headers=0`;
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${callbackName}&sheet=${sheetName}&headers=0&_=${Date.now()}`;
         
         const timeout = setTimeout(() => {
             cleanup();
