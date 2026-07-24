@@ -1,7 +1,11 @@
-// AI Insights Engine for FuturON Preschool Dashboard
+// ============================================
+// AI Intelligence Engine - FuturON Preschool
+// Pattern Recognition, Trend Analysis, Contextual Insights
+// ============================================
+
 const AIEngine = {
 
-    // Helper: get active days for a student in a given week
+    // === HELPERS ===
     getActive(weekData) {
         const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
         const days = allDays.map(dayName => {
@@ -11,17 +15,174 @@ const AIEngine = {
         return days.filter(d => !((d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0)));
     },
 
-    // Helper: cap percentage at 100
     pct(val) { return Math.min(Math.round(val * 100), 100); },
 
-    // Helper: average of a metric across active days
     avg(activeDays, metric) {
         if (!activeDays.length) return 0;
         return activeDays.reduce((s, d) => s + this.pct(d[metric]), 0) / activeDays.length;
     },
 
+    // === PATTERN RECOGNITION ===
+    detectFoodPreferences(studentName) {
+        const weeks = studentsData[studentName];
+        const snackCounts = {};
+        const lunchCounts = {};
+        const highCompletionSnacks = {};
+        const lowCompletionSnacks = {};
+
+        weeks.forEach(w => {
+            this.getActive(w).forEach(d => {
+                const snack = (d.snacks || '').toUpperCase().trim();
+                const lunch = (d.lunch || '').toUpperCase().trim();
+                if (snack && snack !== 'N/A') {
+                    snackCounts[snack] = (snackCounts[snack] || 0) + 1;
+                    if (this.pct(d.snack_completion) >= 90) highCompletionSnacks[snack] = (highCompletionSnacks[snack] || 0) + 1;
+                    if (this.pct(d.snack_completion) < 50) lowCompletionSnacks[snack] = (lowCompletionSnacks[snack] || 0) + 1;
+                }
+                if (lunch && lunch !== 'N/A') lunchCounts[lunch] = (lunchCounts[lunch] || 0) + 1;
+            });
+        });
+
+        const topSnacks = Object.entries(highCompletionSnacks).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+        const avoidSnacks = Object.entries(lowCompletionSnacks).sort((a, b) => b[1] - a[1]).slice(0, 2).map(e => e[0]);
+        const mostFrequentSnack = Object.entries(snackCounts).sort((a, b) => b[1] - a[1])[0];
+
+        return { topSnacks, avoidSnacks, mostFrequentSnack: mostFrequentSnack ? mostFrequentSnack[0] : null, snackCounts, lunchCounts };
+    },
+
+    // === CONSISTENCY SCORING (0-100) ===
+    calculateConsistencyScore(studentName, weekIdx) {
+        const weeks = studentsData[studentName];
+        const currentWeek = weeks[weekIdx];
+        const active = this.getActive(currentWeek);
+        if (!active.length) return { score: 0, grade: 'N/A', factors: [] };
+
+        const factors = [];
+        let score = 0;
+
+        // Attendance consistency (max 25 points)
+        const attendancePct = (active.length / 6) * 100;
+        const attendanceScore = Math.min(25, Math.round(attendancePct / 4));
+        score += attendanceScore;
+        factors.push({ label: 'Attendance', value: attendanceScore, max: 25 });
+
+        // Meal consistency (max 25 points) - low variance = high consistency
+        const snackValues = active.map(d => this.pct(d.snack_completion));
+        const lunchValues = active.map(d => this.pct(d.lunch_completion));
+        const snackVariance = this.variance(snackValues);
+        const lunchVariance = this.variance(lunchValues);
+        const mealConsistency = Math.max(0, 25 - Math.round((snackVariance + lunchVariance) / 80));
+        score += mealConsistency;
+        factors.push({ label: 'Meal Regularity', value: mealConsistency, max: 25 });
+
+        // Hydration consistency (max 25 points)
+        const waterValues = active.map(d => this.pct(d.water_completion));
+        const waterAvg = waterValues.reduce((s, v) => s + v, 0) / waterValues.length;
+        const hydrationScore = Math.min(25, Math.round(waterAvg / 4));
+        score += hydrationScore;
+        factors.push({ label: 'Hydration', value: hydrationScore, max: 25 });
+
+        // Punctuality (max 25 points) - based on arrival times
+        const arrivalMinutes = active.map(d => this.parseTimeToMinutes(d.arrival_time)).filter(m => m > 0);
+        let punctualityScore = 25;
+        if (arrivalMinutes.length) {
+            const lateArrivals = arrivalMinutes.filter(m => m > 570); // After 9:30 AM
+            punctualityScore = Math.max(0, 25 - (lateArrivals.length * 5));
+        }
+        score += punctualityScore;
+        factors.push({ label: 'Punctuality', value: punctualityScore, max: 25 });
+
+        const grade = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B+' : score >= 60 ? 'B' : score >= 50 ? 'C' : 'D';
+        return { score, grade, factors };
+    },
+
+    variance(arr) {
+        if (!arr.length) return 0;
+        const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
+        return arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length;
+    },
+
+    parseTimeToMinutes(timeStr) {
+        if (!timeStr || timeStr === 'N/A') return 0;
+        const match = String(timeStr).match(/(\d{1,2}):(\d{2})/);
+        if (!match) return 0;
+        let h = parseInt(match[1]);
+        const m = parseInt(match[2]);
+        if (timeStr.includes('PM') && h < 12) h += 12;
+        return h * 60 + m;
+    },
+
+    // === TREND FORECASTING ===
+    forecastNextWeek(studentName) {
+        const weeks = studentsData[studentName];
+        if (weeks.length < 2) return null;
+
+        const metrics = ['snack_completion', 'lunch_completion', 'water_completion'];
+        const forecast = {};
+
+        metrics.forEach(metric => {
+            const values = weeks.map(w => {
+                const active = this.getActive(w);
+                return active.length ? Math.round(this.avg(active, metric)) : null;
+            }).filter(v => v !== null);
+
+            if (values.length < 2) { forecast[metric] = { predicted: values[0] || 0, direction: 'stable', confidence: 'low' }; return; }
+
+            // Simple linear regression for trend
+            const n = values.length;
+            const xMean = (n - 1) / 2;
+            const yMean = values.reduce((s, v) => s + v, 0) / n;
+            let num = 0, den = 0;
+            values.forEach((y, x) => { num += (x - xMean) * (y - yMean); den += (x - xMean) * (x - xMean); });
+            const slope = den ? num / den : 0;
+            const predicted = Math.max(0, Math.min(100, Math.round(yMean + slope * (n - xMean))));
+
+            const direction = slope > 3 ? 'improving' : slope < -3 ? 'declining' : 'stable';
+            const confidence = n >= 3 ? 'high' : 'medium';
+            forecast[metric] = { predicted, direction, confidence, slope: Math.round(slope * 10) / 10 };
+        });
+
+        // Attendance forecast
+        const attendanceValues = weeks.map(w => this.getActive(w).length);
+        const avgAttendance = attendanceValues.reduce((s, v) => s + v, 0) / attendanceValues.length;
+        forecast.attendance = { predicted: Math.round(avgAttendance), direction: 'stable', confidence: 'medium' };
+
+        return forecast;
+    },
+
+    // === ARRIVAL TIME ANALYSIS ===
+    analyzeArrivalPattern(studentName, weekIdx) {
+        const weeks = studentsData[studentName];
+        const currentWeek = weeks[weekIdx];
+        const active = this.getActive(currentWeek);
+        const times = active.map(d => this.parseTimeToMinutes(d.arrival_time)).filter(m => m > 0);
+
+        if (!times.length) return null;
+
+        const avgTime = Math.round(times.reduce((s, t) => s + t, 0) / times.length);
+        const earliestTime = Math.min(...times);
+        const latestTime = Math.max(...times);
+        const lateCount = times.filter(t => t > 570).length; // After 9:30
+
+        const formatTime = (mins) => {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+            return `${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+        };
+
+        return {
+            average: formatTime(avgTime),
+            earliest: formatTime(earliestTime),
+            latest: formatTime(latestTime),
+            lateCount,
+            onTimePercentage: Math.round(((times.length - lateCount) / times.length) * 100)
+        };
+    },
+
     // ============================
-    // 1. PERSONALIZED TIPS
+    // 1. PERSONALIZED TIPS (Enhanced)
     // ============================
     generateTips(studentName, weekIdx) {
         const weeks = studentsData[studentName];
@@ -29,7 +190,6 @@ const AIEngine = {
         const active = this.getActive(currentWeek);
         const tips = [];
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
-        const totalDays = 6; // Mon-Sat
 
         if (!active.length) {
             tips.push({ icon: '⚠️', text: `${name} was absent the entire week. Please ensure regular attendance for better learning.`, severity: 'critical' });
@@ -40,45 +200,75 @@ const AIEngine = {
         const lunchAvg = Math.round(this.avg(active, 'lunch_completion'));
         const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const attendance = active.length;
-        const absentDays = totalDays - attendance;
+        const absentDays = 6 - attendance;
         const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
         const weekBottles = bottleRefills + attendance;
 
-        // Calculate monthly cumulative bottles (all weeks up to and including current)
-        let monthlyBottles = 0;
-        let monthlyDaysPresent = 0;
+        // Monthly cumulative
+        let monthlyBottles = 0, monthlyDaysPresent = 0;
         for (let w = 0; w <= weekIdx; w++) {
             const wActive = this.getActive(weeks[w]);
             monthlyBottles += wActive.reduce((s, d) => s + d.bottle_refill, 0) + wActive.length;
             monthlyDaysPresent += wActive.length;
         }
 
-        // Snack tips based on actual score
+        // Consistency score insight
+        const consistency = this.calculateConsistencyScore(studentName, weekIdx);
+        tips.push({ icon: '📊', text: `${name}'s weekly consistency score: ${consistency.score}/100 (Grade: ${consistency.grade}). ${consistency.score >= 80 ? 'Excellent routine!' : consistency.score >= 60 ? 'Good routine with room for improvement.' : 'Building better habits would help significantly.'}`, severity: consistency.score >= 80 ? 'positive' : consistency.score >= 60 ? 'info' : 'warning' });
+
+        // Snack tips
         if (snackAvg >= 90) tips.push({ icon: '⭐', text: `${name} is eating snacks very well (${snackAvg}%). Keep sending the same type of snacks!`, severity: 'positive' });
         else if (snackAvg >= 70) tips.push({ icon: '🍎', text: `${name} eats ${snackAvg}% of snacks. Try adding their favourite fruits to improve further.`, severity: 'info' });
         else if (snackAvg >= 50) tips.push({ icon: '🍎', text: `${name} only finishes ${snackAvg}% of snacks. Consider smaller portions or different items.`, severity: 'warning' });
         else tips.push({ icon: '🍎', text: `${name} is eating very less snacks (${snackAvg}%). Please try favourite foods or check if portion is too large.`, severity: 'critical' });
 
-        // Lunch tips based on actual score
+        // Lunch tips
         if (lunchAvg >= 90) tips.push({ icon: '⭐', text: `${name} is finishing lunch very well (${lunchAvg}%). Great appetite at school!`, severity: 'positive' });
         else if (lunchAvg >= 70) tips.push({ icon: '🍽️', text: `${name} eats ${lunchAvg}% of lunch. Good, but can improve with preferred menu items.`, severity: 'info' });
         else if (lunchAvg >= 50) tips.push({ icon: '🍽️', text: `${name} only finishes ${lunchAvg}% of lunch. Try sending lighter or favourite meals.`, severity: 'warning' });
         else tips.push({ icon: '🍽️', text: `${name} is eating very less lunch (${lunchAvg}%). Please discuss with teacher about food preferences.`, severity: 'critical' });
 
-        // Water tips based on actual score
+        // Water tips with monthly context
         if (waterAvg >= 90) tips.push({ icon: '💧', text: `${name} drinks water very well (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} days. Keep it up!`, severity: 'positive' });
         else if (waterAvg >= 70) tips.push({ icon: '💧', text: `${name} drinks ${waterAvg}% of required water. This week: ${Math.round(weekBottles)} bottles (monthly: ${Math.round(monthlyBottles)}). Remind to drink more often.`, severity: 'info' });
         else if (waterAvg >= 50) tips.push({ icon: '💧', text: `${name} water intake is moderate (${waterAvg}%). This week: ${Math.round(weekBottles)} bottles. Send a bigger bottle or add flavoured water.`, severity: 'warning' });
         else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). Only ${Math.round(weekBottles)} bottles this week. This needs immediate attention.`, severity: 'critical' });
 
-        // Attendance tips based on actual data
-        if (attendance === totalDays) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all ${totalDays} days. Consistency builds great habits.`, severity: 'positive' });
-        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of ${totalDays} days present.`, severity: 'info' });
+        // Attendance
+        if (attendance === 6) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all 6 days. Consistency builds great habits.`, severity: 'positive' });
+        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week. ${attendance} out of 6 days present.`, severity: 'info' });
         else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was absent ${absentDays} days this week. Regular attendance is important for learning.`, severity: 'warning' });
 
+        // Arrival time insight
+        const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
+        if (arrivalPattern) {
+            if (arrivalPattern.onTimePercentage === 100) {
+                tips.push({ icon: '⏰', text: `${name} arrived on time every day (average: ${arrivalPattern.average}). Excellent punctuality!`, severity: 'positive' });
+            } else if (arrivalPattern.lateCount >= 2) {
+                tips.push({ icon: '⏰', text: `${name} arrived late ${arrivalPattern.lateCount} times this week (latest: ${arrivalPattern.latest}). Aim for arrival before 9:30 AM.`, severity: 'warning' });
+            }
+        }
+
+        // Food preference insight (only if multiple weeks available)
+        if (weekIdx >= 1) {
+            const prefs = this.detectFoodPreferences(studentName);
+            if (prefs.topSnacks.length > 0) {
+                tips.push({ icon: '🧠', text: `Pattern detected: ${name} eats best when given ${prefs.topSnacks.slice(0, 2).join(' or ')}. Consider sending these more often.`, severity: 'info' });
+            }
+        }
+
+        // Trend forecast
+        const forecast = this.forecastNextWeek(studentName);
+        if (forecast && weekIdx === weeks.length - 1) {
+            const snackTrend = forecast.snack_completion;
+            if (snackTrend.direction === 'declining') {
+                tips.push({ icon: '📉', text: `Trend alert: Snack completion has been declining (${snackTrend.slope}% per week). Next week forecast: ${snackTrend.predicted}%. Consider changing snack variety.`, severity: 'warning' });
+            } else if (snackTrend.direction === 'improving') {
+                tips.push({ icon: '📈', text: `Positive trend: Meal completion is improving (+${snackTrend.slope}% per week). Current strategy is working!`, severity: 'positive' });
+            }
+        }
+
         // Uniform compliance
-        const uniformDays = active.filter(d => d.uniform === 'YES').length;
-        const colourDays = active.filter(d => d.uniform && d.uniform.toUpperCase().includes('COLOUR')).length;
         const nonUniformDays = active.filter(d => d.uniform === 'NO').length;
         if (nonUniformDays > 0) {
             tips.push({ icon: '👕', text: `${name} missed uniform on ${nonUniformDays} day(s). Please check the school calendar for uniform/colour dress days.`, severity: 'warning' });
@@ -88,14 +278,13 @@ const AIEngine = {
     },
 
     // ============================
-    // 2. WEEKLY SUMMARY
+    // 2. WEEKLY SUMMARY (Enhanced)
     // ============================
     generateWeeklySummary(studentName, weekIdx) {
         const weeks = studentsData[studentName];
         const currentWeek = weeks[weekIdx];
         const active = this.getActive(currentWeek);
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
-        const totalDays = 6; // Mon-Sat
 
         if (!active.length) {
             return `${name} was absent for the entire week (${currentWeek.label}). No performance data is available. We recommend checking in with the family to ensure everything is okay.`;
@@ -109,42 +298,42 @@ const AIEngine = {
         const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
         const weekBottles = bottleRefills + attendance;
 
-        // Calculate monthly cumulative
-        let monthlyBottles = 0;
-        let monthlyDaysPresent = 0;
+        // Monthly cumulative
+        let monthlyBottles = 0, monthlyDaysPresent = 0;
         for (let w = 0; w <= weekIdx; w++) {
             const wActive = this.getActive(weeks[w]);
             monthlyBottles += wActive.reduce((s, d) => s + d.bottle_refill, 0) + wActive.length;
             monthlyDaysPresent += wActive.length;
         }
 
-        let summary = `${name} attended ${attendance} out of ${totalDays} days during ${currentWeek.label}. `;
+        // Consistency score
+        const consistency = this.calculateConsistencyScore(studentName, weekIdx);
 
-        if (overall >= 90) {
-            summary += `Your child did excellent this week with ${overall}% overall performance in meals and hydration. `;
-        } else if (overall >= 70) {
-            summary += `Your child did well this week with ${overall}% overall performance. `;
-        } else if (overall >= 50) {
-            summary += `Performance was moderate at ${overall}% — there is room for improvement. `;
-        } else {
-            summary += `Performance needs attention with only ${overall}% average. Please discuss with the teacher. `;
-        }
+        let summary = `${name} attended ${attendance} out of 6 days during ${currentWeek.label}. `;
 
-        // Highlight strengths
+        if (overall >= 90) summary += `Your child did excellent this week with ${overall}% overall performance. `;
+        else if (overall >= 70) summary += `Your child did well this week with ${overall}% overall performance. `;
+        else if (overall >= 50) summary += `Performance was moderate at ${overall}% — there is room for improvement. `;
+        else summary += `Performance needs attention with only ${overall}% average. Please discuss with the teacher. `;
+
+        // Consistency grade
+        summary += `Consistency Grade: ${consistency.grade} (${consistency.score}/100). `;
+
+        // Strengths
         const strengths = [];
         if (snackAvg >= 90) strengths.push('snack eating');
         if (lunchAvg >= 90) strengths.push('lunch eating');
         if (waterAvg >= 90) strengths.push('water drinking');
         if (strengths.length) summary += `Doing great in: ${strengths.join(', ')}. `;
 
-        // Highlight areas needing work
+        // Areas needing work
         const improvements = [];
         if (snackAvg < 60) improvements.push(`snacks (${snackAvg}%)`);
         if (lunchAvg < 60) improvements.push(`lunch (${lunchAvg}%)`);
         if (waterAvg < 60) improvements.push(`water (${waterAvg}%)`);
         if (improvements.length) summary += `Needs improvement in: ${improvements.join(', ')}. `;
 
-        summary += `This week water bottles: ${Math.round(weekBottles)} (${attendance} from home + ${Math.round(bottleRefills)} refilled). Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} school days.`;
+        summary += `This week water bottles: ${Math.round(weekBottles)} (${attendance} from home + ${Math.round(bottleRefills)} refilled). Monthly total: ${Math.round(monthlyBottles)} bottles across ${monthlyDaysPresent} school days. `;
 
         // Trend comparison
         if (weekIdx > 0) {
@@ -161,172 +350,46 @@ const AIEngine = {
     },
 
     // ============================
-    // 3. PREDICTIONS
-    // ============================
-    generatePredictions(studentName) {
-        const weeks = studentsData[studentName];
-        if (weeks.length < 2) {
-            return { snack: { trend: 'stable', predicted: null, label: 'Insufficient data' }, lunch: { trend: 'stable', predicted: null, label: 'Insufficient data' }, water: { trend: 'stable', predicted: null, label: 'Insufficient data' }, attendance: { trend: 'stable', predicted: null, label: 'Insufficient data' } };
-        }
-
-        const predict = (metric) => {
-            const values = weeks.map(w => {
-                const active = this.getActive(w);
-                return active.length ? Math.round(this.avg(active, metric)) : null;
-            }).filter(v => v !== null);
-
-            if (values.length < 2) return { trend: 'stable', predicted: values[0] || 0, label: 'Stable' };
-
-            const recent = values[values.length - 1];
-            const prev = values[values.length - 2];
-            const diff = recent - prev;
-            const predicted = Math.max(0, Math.min(100, recent + diff));
-
-            if (diff > 5) return { trend: 'improving', predicted, label: `Improving (+${diff}%)`, arrow: '↗', color: '#10b981' };
-            if (diff < -5) return { trend: 'declining', predicted, label: `Declining (${diff}%)`, arrow: '↘', color: '#ef4444' };
-            return { trend: 'stable', predicted: recent, label: `Stable (${recent}%)`, arrow: '→', color: '#f59e0b' };
-        };
-
-        const attendanceValues = weeks.map(w => {
-            const allDays = w.days.filter(d => d.day !== 'SATURDAY');
-            const active = this.getActive(w);
-            return Math.round((active.length / allDays.length) * 100);
-        });
-        const attRecent = attendanceValues[attendanceValues.length - 1];
-        const attPrev = attendanceValues.length > 1 ? attendanceValues[attendanceValues.length - 2] : attRecent;
-        const attDiff = attRecent - attPrev;
-
-        return {
-            snack: predict('snack_completion'),
-            lunch: predict('lunch_completion'),
-            water: predict('water_completion'),
-            attendance: {
-                trend: attDiff > 5 ? 'improving' : attDiff < -5 ? 'declining' : 'stable',
-                predicted: Math.max(0, Math.min(100, attRecent + attDiff)),
-                label: attDiff > 5 ? `Improving (+${attDiff}%)` : attDiff < -5 ? `Declining (${attDiff}%)` : `Stable (${attRecent}%)`,
-                arrow: attDiff > 5 ? '↗' : attDiff < -5 ? '↘' : '→',
-                color: attDiff > 5 ? '#10b981' : attDiff < -5 ? '#ef4444' : '#f59e0b'
-            }
-        };
-    },
-
-    // ============================
-    // 4. TEACHER RECOMMENDATIONS
-    // ============================
-    generateRecommendations(weekIdx) {
-        const recs = [];
-        const weekLabel = studentsData[Object.keys(studentsData)[0]][weekIdx]?.label;
-
-        Object.keys(studentsData).forEach(studentName => {
-            const week = studentsData[studentName].find(w => w.label === weekLabel);
-            if (!week) return;
-            const allDays = week.days.filter(d => d.day !== 'SATURDAY');
-            const active = this.getActive(week);
-            const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
-
-            // Attendance issues
-            if (active.length === 0) {
-                recs.push({ priority: 'urgent', icon: '🚨', text: `${name} was absent the entire week. Contact family immediately.`, student: studentName, category: 'attendance' });
-            } else if (active.length <= 2) {
-                recs.push({ priority: 'urgent', icon: '⚠️', text: `${name} attended only ${active.length}/${allDays.length} days. Follow up on absences.`, student: studentName, category: 'attendance' });
-            }
-
-            if (!active.length) return;
-
-            const snackAvg = this.avg(active, 'snack_completion');
-            const lunchAvg = this.avg(active, 'lunch_completion');
-            const waterAvg = this.avg(active, 'water_completion');
-
-            // Low water — health concern
-            if (waterAvg < 50) {
-                recs.push({ priority: 'urgent', icon: '💧', text: `${name}: Water intake critically low (${Math.round(waterAvg)}%). Ensure frequent water reminders.`, student: studentName, category: 'health' });
-            } else if (waterAvg < 70) {
-                recs.push({ priority: 'important', icon: '💧', text: `${name}: Water intake below target (${Math.round(waterAvg)}%). Encourage more hydration.`, student: studentName, category: 'health' });
-            }
-
-            // Low lunch — nutrition concern
-            if (lunchAvg < 50) {
-                recs.push({ priority: 'urgent', icon: '🍽️', text: `${name}: Lunch completion very low (${Math.round(lunchAvg)}%). Check food preferences or portion size.`, student: studentName, category: 'nutrition' });
-            } else if (lunchAvg < 70) {
-                recs.push({ priority: 'important', icon: '🍽️', text: `${name}: Lunch completion needs attention (${Math.round(lunchAvg)}%).`, student: studentName, category: 'nutrition' });
-            }
-
-            // Low snack
-            if (snackAvg < 50) {
-                recs.push({ priority: 'important', icon: '🍎', text: `${name}: Snack completion low (${Math.round(snackAvg)}%). Offer favourite fruits or alternatives.`, student: studentName, category: 'nutrition' });
-            }
-
-            // Celebrations
-            const overall = (snackAvg + lunchAvg + waterAvg) / 3;
-            if (overall >= 95) {
-                recs.push({ priority: 'celebrate', icon: '🏆', text: `${name} achieved ${Math.round(overall)}% overall — outstanding performance! Acknowledge in class.`, student: studentName, category: 'celebration' });
-            } else if (overall >= 85 && active.length === allDays.length) {
-                recs.push({ priority: 'celebrate', icon: '⭐', text: `${name}: Perfect attendance with ${Math.round(overall)}% completion. Great consistency!`, student: studentName, category: 'celebration' });
-            }
-
-            // Week-over-week decline
-            if (weekIdx > 0) {
-                const prevWeek = studentsData[studentName][weekIdx - 1];
-                if (prevWeek) {
-                    const prevActive = this.getActive(prevWeek);
-                    if (prevActive.length) {
-                        const prevOverall = (this.avg(prevActive, 'snack_completion') + this.avg(prevActive, 'lunch_completion') + this.avg(prevActive, 'water_completion')) / 3;
-                        if (prevOverall - overall > 25) {
-                            recs.push({ priority: 'important', icon: '📉', text: `${name}: Performance dropped ${Math.round(prevOverall - overall)}% from last week. Check if everything is okay.`, student: studentName, category: 'trend' });
-                        }
-                    }
-                }
-            }
-        });
-
-        // Sort: urgent first, then important, then celebrate
-        const priority = { urgent: 0, important: 1, celebrate: 2 };
-        recs.sort((a, b) => priority[a.priority] - priority[b.priority]);
-        return recs;
-    },
-
-    // ============================
-    // 5. ANOMALY DETECTION
+    // 3. ANOMALY DETECTION (Enhanced)
     // ============================
     detectAnomalies(studentName, weekIdx) {
         const weeks = studentsData[studentName];
         const currentWeek = weeks[weekIdx];
-        const allDays = currentWeek.days.filter(d => d.day !== 'SATURDAY');
         const active = this.getActive(currentWeek);
         const anomalies = [];
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
+        const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].map(dayName => {
+            const found = currentWeek.days.find(d => d.day === dayName);
+            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, water_completion: 0 };
+        });
 
-        // Check consecutive absent days
-        let consecutiveAbsent = 0;
-        let maxConsecutive = 0;
+        // Consecutive absent days
+        let consecutiveAbsent = 0, maxConsecutive = 0;
         allDays.forEach(d => {
             const absent = (d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0);
             if (absent) { consecutiveAbsent++; maxConsecutive = Math.max(maxConsecutive, consecutiveAbsent); }
             else { consecutiveAbsent = 0; }
         });
 
-        if (maxConsecutive >= 3) {
-            anomalies.push({ severity: 'critical', icon: '🔴', text: `${maxConsecutive} consecutive absent days detected. Possible health or family issue.`, type: 'attendance' });
-        } else if (maxConsecutive === 2) {
-            anomalies.push({ severity: 'warning', icon: '🟡', text: `2 consecutive absent days. Monitor attendance pattern.`, type: 'attendance' });
-        }
+        if (maxConsecutive >= 3) anomalies.push({ severity: 'critical', icon: '🔴', text: `${maxConsecutive} consecutive absent days detected. Possible health or family issue.`, type: 'attendance' });
+        else if (maxConsecutive === 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `2 consecutive absent days. Monitor attendance pattern.`, type: 'attendance' });
 
         if (!active.length) return anomalies;
 
-        // Check for sudden drops within the week (present day with 0% in any metric)
+        // Sudden daily drops (present but 0%)
         active.forEach(d => {
-            if (this.pct(d.snack_completion) === 0 && d.snacks !== 'N/A') {
-                anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% snack completion. Possible refusal or illness.`, type: 'metric' });
-            }
-            if (this.pct(d.lunch_completion) === 0 && d.lunch !== 'N/A') {
-                anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% lunch completion. Check appetite/preferences.`, type: 'metric' });
-            }
-            if (this.pct(d.water_completion) === 0) {
-                anomalies.push({ severity: 'critical', icon: '🔴', text: `${d.day}: Zero water intake while present. Health concern.`, type: 'health' });
-            }
+            if (this.pct(d.snack_completion) === 0 && d.snacks !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% snack completion. Possible food refusal or illness.`, type: 'metric' });
+            if (this.pct(d.lunch_completion) === 0 && d.lunch !== 'N/A') anomalies.push({ severity: 'warning', icon: '🟡', text: `${d.day}: Present but 0% lunch completion. Check appetite/preferences.`, type: 'metric' });
+            if (this.pct(d.water_completion) === 0) anomalies.push({ severity: 'critical', icon: '🔴', text: `${d.day}: Zero water intake while present. Health concern.`, type: 'health' });
         });
 
-        // Week-over-week comparison for sudden drops
+        // Late arrival pattern
+        const arrivalPattern = this.analyzeArrivalPattern(studentName, weekIdx);
+        if (arrivalPattern && arrivalPattern.lateCount >= 3) {
+            anomalies.push({ severity: 'warning', icon: '🟠', text: `Late arrival pattern: ${arrivalPattern.lateCount} out of ${active.length} days arrived after 9:30 AM. Average arrival: ${arrivalPattern.average}.`, type: 'punctuality' });
+        }
+
+        // Week-over-week drops
         if (weekIdx > 0) {
             const prevActive = this.getActive(weeks[weekIdx - 1]);
             if (prevActive.length && active.length) {
@@ -335,35 +398,94 @@ const AIEngine = {
                 metrics.forEach((m, i) => {
                     const curr = this.avg(active, m);
                     const prev = this.avg(prevActive, m);
-                    if (prev - curr > 30) {
-                        anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} completion crashed ${Math.round(prev - curr)}% from last week (${Math.round(prev)}% → ${Math.round(curr)}%).`, type: 'trend' });
-                    } else if (prev - curr > 20) {
-                        anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} completion dropped ${Math.round(prev - curr)}% from last week.`, type: 'trend' });
-                    }
+                    if (prev - curr > 30) anomalies.push({ severity: 'critical', icon: '🔴', text: `${labels[i]} completion crashed ${Math.round(prev - curr)}% from last week (${Math.round(prev)}% → ${Math.round(curr)}%).`, type: 'trend' });
+                    else if (prev - curr > 20) anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} completion dropped ${Math.round(prev - curr)}% from last week.`, type: 'trend' });
                 });
 
-                // Attendance anomaly
                 const prevAttendance = prevActive.length;
-                if (prevAttendance - active.length >= 2) {
-                    anomalies.push({ severity: 'warning', icon: '🟡', text: `Attendance dropped by ${prevAttendance - active.length} days compared to last week.`, type: 'attendance' });
-                }
+                if (prevAttendance - active.length >= 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `Attendance dropped by ${prevAttendance - active.length} days compared to last week.`, type: 'attendance' });
             }
         }
 
-        // Low streak detection (3+ days below 50% in any metric)
+        // Low streak detection (3+ days below 50%)
         const checkStreak = (metric, label) => {
             let lowStreak = 0;
-            active.forEach(d => {
-                if (this.pct(d[metric]) < 50 && this.pct(d[metric]) > 0) { lowStreak++; }
-            });
-            if (lowStreak >= 3) {
-                anomalies.push({ severity: 'warning', icon: '🟠', text: `${label}: Below 50% for ${lowStreak} days this week — persistent low pattern.`, type: 'pattern' });
-            }
+            active.forEach(d => { if (this.pct(d[metric]) < 50 && this.pct(d[metric]) > 0) lowStreak++; });
+            if (lowStreak >= 3) anomalies.push({ severity: 'warning', icon: '🟠', text: `${label}: Below 50% for ${lowStreak} days this week — persistent low pattern detected.`, type: 'pattern' });
         };
         checkStreak('snack_completion', 'Snacks');
         checkStreak('lunch_completion', 'Lunch');
         checkStreak('water_completion', 'Water');
 
+        // Variance anomaly (wildly inconsistent within the week)
+        const snackValues = active.map(d => this.pct(d.snack_completion));
+        if (snackValues.length >= 3 && this.variance(snackValues) > 1500) {
+            anomalies.push({ severity: 'info', icon: '📊', text: `High variability in snack completion (ranges from ${Math.min(...snackValues)}% to ${Math.max(...snackValues)}%). Inconsistent eating pattern.`, type: 'pattern' });
+        }
+
         return anomalies;
+    },
+
+    // ============================
+    // 4. TEACHER RECOMMENDATIONS (Enhanced)
+    // ============================
+    generateRecommendations(weekIdx) {
+        const recs = [];
+        const weekLabel = studentsData[Object.keys(studentsData)[0]][weekIdx]?.label;
+
+        Object.keys(studentsData).forEach(studentName => {
+            const weeks = studentsData[studentName];
+            const week = weeks.find(w => w.label === weekLabel);
+            if (!week) return;
+            const active = this.getActive(week);
+            const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
+
+            if (active.length === 0) {
+                recs.push({ priority: 'urgent', icon: '🚨', text: `${name} was absent the entire week. Contact family immediately.`, student: studentName });
+                return;
+            }
+            if (active.length <= 2) {
+                recs.push({ priority: 'urgent', icon: '⚠️', text: `${name} attended only ${active.length}/6 days. Follow up on absences.`, student: studentName });
+            }
+
+            const snackAvg = this.avg(active, 'snack_completion');
+            const lunchAvg = this.avg(active, 'lunch_completion');
+            const waterAvg = this.avg(active, 'water_completion');
+            const overall = (snackAvg + lunchAvg + waterAvg) / 3;
+
+            if (waterAvg < 50) recs.push({ priority: 'urgent', icon: '💧', text: `${name}: Water intake critically low (${Math.round(waterAvg)}%). Ensure frequent water reminders.`, student: studentName });
+            else if (waterAvg < 70) recs.push({ priority: 'important', icon: '💧', text: `${name}: Water intake below target (${Math.round(waterAvg)}%). Encourage more hydration.`, student: studentName });
+
+            if (lunchAvg < 50) recs.push({ priority: 'urgent', icon: '🍽️', text: `${name}: Lunch completion very low (${Math.round(lunchAvg)}%). Check food preferences or portion size.`, student: studentName });
+            else if (lunchAvg < 70) recs.push({ priority: 'important', icon: '🍽️', text: `${name}: Lunch completion needs attention (${Math.round(lunchAvg)}%).`, student: studentName });
+
+            if (snackAvg < 50) recs.push({ priority: 'important', icon: '🍎', text: `${name}: Snack completion low (${Math.round(snackAvg)}%). Offer favourite fruits or alternatives.`, student: studentName });
+
+            // Consistency-based recommendation
+            const consistency = this.calculateConsistencyScore(studentName, weekIdx);
+            if (consistency.score < 50) {
+                recs.push({ priority: 'important', icon: '📊', text: `${name}: Low consistency score (${consistency.score}/100). Needs structured routine support.`, student: studentName });
+            }
+
+            // Celebrations
+            if (overall >= 95) recs.push({ priority: 'celebrate', icon: '🏆', text: `${name} achieved ${Math.round(overall)}% overall — outstanding! Acknowledge in class.`, student: studentName });
+            else if (overall >= 85 && active.length >= 5) recs.push({ priority: 'celebrate', icon: '⭐', text: `${name}: Great attendance with ${Math.round(overall)}% completion. Consistency star!`, student: studentName });
+
+            // Week-over-week decline
+            if (weekIdx > 0) {
+                const prevWeek = weeks[weekIdx - 1];
+                if (prevWeek) {
+                    const prevActive = this.getActive(prevWeek);
+                    if (prevActive.length) {
+                        const prevOverall = (this.avg(prevActive, 'snack_completion') + this.avg(prevActive, 'lunch_completion') + this.avg(prevActive, 'water_completion')) / 3;
+                        if (prevOverall - overall > 25) recs.push({ priority: 'important', icon: '📉', text: `${name}: Performance dropped ${Math.round(prevOverall - overall)}% from last week. Check if everything is okay.`, student: studentName });
+                    }
+                }
+            }
+        });
+
+        const priority = { urgent: 0, important: 1, celebrate: 2 };
+        recs.sort((a, b) => priority[a.priority] - priority[b.priority]);
+        return recs;
     }
 };
