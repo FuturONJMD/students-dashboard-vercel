@@ -278,7 +278,7 @@ const AIEngine = {
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
 
         if (!active.length) {
-            return `${name} was absent for the entire week (${currentWeek.label}). No performance data is available. We recommend checking in with the family to ensure everything is okay.`;
+            return `${name} was absent for the entire week (${currentWeek.label}). No performance data is available for this week. If your child was unwell, we hope they recover soon. Please contact the school if you need any assistance.`;
         }
 
         const snackAvg = Math.round(this.avg(active, 'snack_completion'));
