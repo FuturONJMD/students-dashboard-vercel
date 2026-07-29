@@ -426,8 +426,10 @@
             const days = getWeekDays(week);
             const hour = new Date().getHours();
             const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-            const daysPresent = days.filter(d => d.arrival_time !== 'N/A').length;
-            const attendancePct = Math.round((daysPresent / days.length) * 100);
+            const daysPresent = getActiveDays(days).length;
+            // Only count days that have data entered (excludes future days, 2nd/4th Sat, public holidays)
+            const totalDaysInWeek = days.filter(d => !(d.snacks === 'N/A' && d.lunch === 'N/A' && d.arrival_time === 'N/A')).length || daysPresent;
+            const attendancePct = totalDaysInWeek > 0 ? Math.round((daysPresent / totalDaysInWeek) * 100) : 0;
             const badgeClass = attendancePct >= 80 ? 'badge-green' : 'badge-yellow';
             const badgeText = attendancePct >= 80 ? 'EXCELLENT' : attendancePct >= 60 ? 'GOOD' : 'NEEDS ATTENTION';
 
@@ -506,10 +508,14 @@
 
         function renderOverview(days) {
             const active = getActiveDays(days);
+            // Saturday is half-day (snacks only, no lunch) — exclude Saturday from lunch average
+            const lunchDays = active.filter(d => d.day !== 'SATURDAY');
             const snackAvg = active.length ? active.reduce((s, d) => s + pct(d.snack_completion), 0) / active.length : 0;
-            const lunchAvg = active.length ? active.reduce((s, d) => s + pct(d.lunch_completion), 0) / active.length : 0;
+            const lunchAvg = lunchDays.length ? lunchDays.reduce((s, d) => s + pct(d.lunch_completion), 0) / lunchDays.length : 0;
             const waterAvg = active.length ? active.reduce((s, d) => s + pct(d.water_completion), 0) / active.length : 0;
             const bottleTotal = active.reduce((s, d) => s + d.bottle_refill, 0);
+            // Only count school days that have data (excludes future days, 2nd/4th Saturdays, public holidays)
+            const totalSchoolDays = active.length + days.filter(d => isAbsent(d) && d.snacks !== 'N/A').length || active.length;
 
             let html = `
                 <div class="section-header">MEALS & HYDRATION</div>
@@ -531,11 +537,11 @@
                 <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
                     <div class="kpi-card" style="border-top:3px solid #22c55e;">
                         <div class="kpi-icon" style="background:rgba(34,197,94,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                        <div class="kpi-label">Days Present</div><div class="kpi-value" style="color:#34d399;">${active.length}</div><div class="kpi-sublabel">Your child attended ${active.length} out of ${days.length} school days this week</div>
+                        <div class="kpi-label">Days Present</div><div class="kpi-value" style="color:#34d399;">${active.length}</div><div class="kpi-sublabel">Your child attended ${active.length} out of ${totalSchoolDays} school days this week</div>
                     </div>
                     <div class="kpi-card" style="border-top:3px solid #f43f5e;">
                         <div class="kpi-icon" style="background:rgba(244,63,94,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-                        <div class="kpi-label">Days Absent</div><div class="kpi-value" style="color:#fb7185;">${days.length - active.length}</div><div class="kpi-sublabel">Your child missed ${days.length - active.length} school day(s) this week</div>
+                        <div class="kpi-label">Days Absent</div><div class="kpi-value" style="color:#fb7185;">${totalSchoolDays - active.length}</div><div class="kpi-sublabel">Your child missed ${totalSchoolDays - active.length} school day(s) this week</div>
                     </div>
                     <div class="kpi-card border-orange">
                         <div class="kpi-icon" style="background:rgba(245,158,11,0.1);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v6"/><path d="M8 22h8"/><path d="M12 18h0"/><circle cx="12" cy="18" r="2"/></svg></div>
@@ -545,11 +551,16 @@
             `;
 
             // Daily Nutrition Insight - calculates overall nutrition % from food + water
+            // Saturday = half-day (snacks + water only, no lunch)
             const nutritionPerDay = active.map(d => {
                 const snack = pct(d.snack_completion);
                 const lunch = pct(d.lunch_completion);
                 const water = pct(d.water_completion);
-                // Nutrition score: 40% food (snack+lunch) + 30% hydration
+                if (d.day === 'SATURDAY') {
+                    // Half-day: only snacks (45%) + water (55%)
+                    return Math.round((snack * 0.45) + (water * 0.55));
+                }
+                // Full day: snacks (25%) + lunch (45%) + water (30%)
                 return Math.round((snack * 0.25) + (lunch * 0.45) + (water * 0.30));
             });
             const avgNutrition = nutritionPerDay.length ? Math.round(nutritionPerDay.reduce((s, v) => s + v, 0) / nutritionPerDay.length) : 0;

@@ -19,7 +19,10 @@ const AIEngine = {
 
     avg(activeDays, metric) {
         if (!activeDays.length) return 0;
-        return activeDays.reduce((s, d) => s + this.pct(d[metric]), 0) / activeDays.length;
+        // Saturday is half-day (no lunch served), exclude from lunch average
+        const days = metric === 'lunch_completion' ? activeDays.filter(d => d.day !== 'SATURDAY') : activeDays;
+        if (!days.length) return 0;
+        return days.reduce((s, d) => s + this.pct(d[metric]), 0) / days.length;
     },
 
     // === PATTERN RECOGNITION ===
