@@ -675,12 +675,22 @@
             const drMatch = weekDateRange.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
             if (drMatch) weekStartDate = new Date(parseInt(drMatch[3]), parseInt(drMatch[2]) - 1, parseInt(drMatch[1]));
 
-            function getDayDate(dayName) {
+            function getDayDate(d) {
+                // Use date from sheet data if available (DD/MM/YYYY format)
+                if (d.date) {
+                    const m = String(d.date).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                    if (m) {
+                        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        return `${String(m[1]).padStart(2,'0')} ${months[parseInt(m[2]) - 1]}`;
+                    }
+                    return d.date;
+                }
+                // Fallback: compute from week date_range
                 if (!weekStartDate) return '';
                 const schoolDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-                const startJsDay = weekStartDate.getDay(); // 0=Sun...6=Sat
+                const startJsDay = weekStartDate.getDay();
                 const startSchoolIdx = startJsDay === 0 ? 6 : startJsDay - 1;
-                const targetSchoolIdx = schoolDays.indexOf(dayName);
+                const targetSchoolIdx = schoolDays.indexOf(d.day);
                 let diff = targetSchoolIdx - startSchoolIdx;
                 if (diff < 0) diff += 7;
                 const dt = new Date(weekStartDate);
@@ -704,7 +714,7 @@
                 const hasAnyData = (d.snacks && d.snacks !== 'N/A') || (d.lunch && d.lunch !== 'N/A') || (d.arrival_time && d.arrival_time !== 'N/A') || d.snack_completion > 0 || d.lunch_completion > 0 || d.water_completion > 0;
                 if (!hasAnyData) return;
 
-                const dayDate = getDayDate(d.day);
+                const dayDate = getDayDate(d);
                 if (isAbsent(d)) {
                     html += `<div style="display:grid; grid-template-columns:1.2fr 5fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
                         <div><div class="snap-day">${d.day}</div><div style="font-size:0.6rem; color:#94a3b8; font-weight:500;">${dayDate}</div></div>

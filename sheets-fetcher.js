@@ -55,44 +55,85 @@ async function fetchViaAppsScript() {
 }
 
 // Parse rows from Apps Script (array of arrays with display values)
+// Auto-detects whether sheet has a Date column (offset=1) or not (offset=0)
 function parseSheetRows(rows) {
     const weeks = [];
     let i = 0;
+    const validDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+
+    // Detect if sheet has a date column by checking data rows
+    let colOffset = 0;
+    for (let r = 0; r < rows.length; r++) {
+        const row = rows[r] || [];
+        const cell0 = (row[0] || '').toUpperCase().trim();
+        const cell1 = (row[1] || '').toUpperCase().trim();
+        // If first cell looks like a date (DD/MM/YYYY) and second cell is a valid day name
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(cell0) && validDays.includes(cell1)) {
+            colOffset = 1;
+            break;
+        }
+        // If first cell is "DATE" (header label)
+        if (cell0 === 'DATE' && (cell1.includes('TO') || cell1.includes('ARRIVAL'))) {
+            colOffset = 1;
+            break;
+        }
+        // Original format: first cell is a day name
+        if (validDays.includes(cell0)) {
+            colOffset = 0;
+            break;
+        }
+    }
+
     while (i < rows.length) {
-        const rowText = (rows[i] || []).join(' ').toUpperCase().trim();
+        const row = rows[i] || [];
+        const rowText = row.join(' ').toUpperCase().trim();
         const hasWeek = rowText.includes('WEEK');
         const hasArrival = rowText.includes('ARRIVAL');
-        const isDayRow = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].some(d => rowText.startsWith(d));
+        // Check if any of the first cells is a valid day name
+        const cell0 = (row[0] || '').toUpperCase().trim();
+        const cell1 = (row[1] || '').toUpperCase().trim();
+        const isDayRow = validDays.includes(cell0) || validDays.includes(cell1);
         
         if (hasWeek && !hasArrival && !isDayRow) {
-            // Extract the full week label from the row (e.g., "AUGUST 1ST WEEK" or "JULY 4TH WEEK")
+            // Extract the full week label from the row
             let label = rowText;
             for (const s of STUDENTS) {
                 label = label.replace(new RegExp(s, 'gi'), '').trim();
             }
+            // Remove date-like patterns (DD/MM/YYYY) from label
+            label = label.replace(/\d{1,2}\/\d{1,2}\/\d{4}/g, '').trim();
             label = label.replace(/\s+/g, ' ').trim();
             i++;
             if (i >= rows.length) break;
             const headerRow = rows[i] || [];
-            const dateRange = headerRow[0] || '';
+            // Date range: find the cell that contains "TO" (e.g., "06/07/2026 TO 11/07/2026")
+            let dateRange = '';
+            for (const cell of headerRow) {
+                if (cell && String(cell).toUpperCase().includes('TO')) {
+                    dateRange = String(cell).trim();
+                    break;
+                }
+            }
             i++;
             const days = [];
-            const validDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
             for (let d = 0; d < 6 && i < rows.length; d++, i++) {
                 const r = rows[i] || [];
-                const dayName = (r[0] || '').toUpperCase().trim();
+                // Day name is at colOffset position
+                const dayName = (r[colOffset] || '').toUpperCase().trim();
                 if (!validDays.includes(dayName)) break;
+                const o = colOffset; // offset for remaining columns
                 days.push({
                     day: dayName,
-                    arrival_time: formatArrivalTime(r[1]),
-                    snacks: r[2] || 'N/A',
-                    snack_completion: parsePercentage(r[3]),
-                    interested_in: r[4] || 'N/A',
-                    lunch_completion: parsePercentage(r[5]),
-                    lunch: r[6] || 'N/A',
-                    water_completion: parsePercentage(r[7]),
-                    bottle_refill: parseBottle(r[8]),
-                    uniform: r[9] || 'N/A'
+                    date: colOffset === 1 ? (r[0] || '') : '', // store raw date if available
+                    arrival_time: formatArrivalTime(r[o + 1]),
+                    snacks: r[o + 2] || 'N/A',
+                    snack_completion: parsePercentage(r[o + 3]),
+                    interested_in: r[o + 4] || 'N/A',
+                    lunch_completion: parsePercentage(r[o + 5]),
+                    lunch: r[o + 6] || 'N/A',
+                    water_completion: parsePercentage(r[o + 7]),
+                    bottle_refill: parseBottle(r[o + 8]),
+                    uniform: r[o + 9] || 'N/A'
                 });
             }
             if (days.length > 0) {
