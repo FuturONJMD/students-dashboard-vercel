@@ -651,35 +651,6 @@
                     </div>
                 </div>
             `;
-            if (!isParentView) {
-            html += `<div class="section-header">ALL STUDENTS - COMPLETION PROGRESS</div><div class="student-progress">`;
-            const weekLabel = studentsData[selectedStudent][selectedWeekIdx].label;
-            Object.keys(studentsData).forEach(sname => {
-                const sw = studentsData[sname].find(w => w.label === weekLabel);
-                if (!sw) return;
-                const sd = getWeekDays(sw);
-                const sActive = getActiveDays(sd);
-                if (!sActive.length) return;
-                const sSnack = sActive.reduce((s, d) => s + pct(d.snack_completion), 0) / sActive.length;
-                const sLunch = sActive.reduce((s, d) => s + pct(d.lunch_completion), 0) / sActive.length;
-                const sWater = sActive.reduce((s, d) => s + pct(d.water_completion), 0) / sActive.length;
-                const overall = Math.round((sSnack + sLunch + sWater) / 3);
-                const isActive = sname === selectedStudent;
-                html += `
-                    <div class="student-row ${isActive ? 'active' : ''}">
-                        <div class="student-header">
-                            <span class="student-name" style="color:${isActive ? '#f8fafc' : '#cbd5e1'}">${sname.charAt(0) + sname.slice(1).toLowerCase()}</span>
-                            <span class="student-overall">${overall}% overall</span>
-                        </div>
-                        <div class="bars-row">
-                            <div class="bar-group"><div class="bar-label" style="color:#a78bfa">Snacks ${Math.round(sSnack)}%</div><div class="bar-track"><div class="bar-fill" style="width:${sSnack}%; background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div></div>
-                            <div class="bar-group"><div class="bar-label" style="color:#34d399">Lunch ${Math.round(sLunch)}%</div><div class="bar-track"><div class="bar-fill" style="width:${sLunch}%; background:linear-gradient(90deg,#059669,#34d399)"></div></div></div>
-                            <div class="bar-group"><div class="bar-label" style="color:#60a5fa">Water ${Math.round(sWater)}%</div><div class="bar-track"><div class="bar-fill" style="width:${sWater}%; background:linear-gradient(90deg,#2563eb,#60a5fa)"></div></div></div>
-                        </div>
-                    </div>`;
-            });
-            html += `</div>`;
-            }
 
             // Daily snapshot - compute dates from date_range
             const weekDateRange = (week.date_range || '').trim();
