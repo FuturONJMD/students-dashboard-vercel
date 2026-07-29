@@ -388,6 +388,8 @@
 
         function pct(val) { return Math.min(Math.round(val * 100), 100); }
         function isAbsent(d) {
+            // If child has arrival time recorded, they are PRESENT (even if they ate nothing)
+            if (d.arrival_time && d.arrival_time !== 'N/A') return false;
             return (d.snacks === 'N/A' && d.lunch === 'N/A') || 
                    (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0);
         }

@@ -12,7 +12,12 @@ const AIEngine = {
             const found = weekData.days.find(d => d.day === dayName);
             return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' };
         });
-        return days.filter(d => !((d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0)));
+        return days.filter(d => {
+            // If child has arrival time, they are PRESENT (even if they ate nothing)
+            if (d.arrival_time && d.arrival_time !== 'N/A') return true;
+            // Otherwise check if they have any activity data
+            return !((d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0));
+        });
     },
 
     pct(val) { return Math.min(Math.round(val * 100), 100); },
@@ -63,15 +68,25 @@ const AIEngine = {
         const factors = [];
         let score = 0;
 
+        // Calculate actual school days (exclude days with no data — holidays/future)
+        const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+        const weekDays = allDays.map(dayName => {
+            const found = currentWeek.days.find(d => d.day === dayName);
+            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', lunch: 'N/A', snack_completion: 0, lunch_completion: 0, water_completion: 0 };
+        });
+        const totalSchoolDays = weekDays.filter(d => !(d.snacks === 'N/A' && d.lunch === 'N/A' && d.arrival_time === 'N/A')).length || active.length;
+
         // Attendance consistency (max 25 points)
-        const attendancePct = (active.length / 6) * 100;
+        const attendancePct = (active.length / totalSchoolDays) * 100;
         const attendanceScore = Math.min(25, Math.round(attendancePct / 4));
         score += attendanceScore;
         factors.push({ label: 'Attendance', value: attendanceScore, max: 25 });
 
         // Meal consistency (max 25 points) - low variance = high consistency
         const snackValues = active.map(d => this.pct(d.snack_completion));
-        const lunchValues = active.map(d => this.pct(d.lunch_completion));
+        // Exclude Saturday from lunch variance (half-day, no lunch)
+        const lunchDays = active.filter(d => d.day !== 'SATURDAY');
+        const lunchValues = lunchDays.map(d => this.pct(d.lunch_completion));
         const snackVariance = this.variance(snackValues);
         const lunchVariance = this.variance(lunchValues);
         const mealConsistency = Math.max(0, 25 - Math.round((snackVariance + lunchVariance) / 80));
@@ -203,7 +218,13 @@ const AIEngine = {
         const lunchAvg = Math.round(this.avg(active, 'lunch_completion'));
         const waterAvg = Math.round(this.avg(active, 'water_completion'));
         const attendance = active.length;
-        const absentDays = 6 - attendance;
+        // Calculate actual school days for this week (excludes holidays/future days)
+        const allWeekDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].map(dayName => {
+            const found = currentWeek.days.find(d => d.day === dayName);
+            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', lunch: 'N/A', snack_completion: 0, lunch_completion: 0, water_completion: 0 };
+        });
+        const totalSchoolDays = allWeekDays.filter(d => !(d.snacks === 'N/A' && d.lunch === 'N/A' && (!d.arrival_time || d.arrival_time === 'N/A'))).length || attendance;
+        const absentDays = totalSchoolDays - attendance;
         const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
         const weekBottles = bottleRefills + attendance;
 
@@ -238,8 +259,8 @@ const AIEngine = {
         else tips.push({ icon: '💧', text: `${name} is not drinking enough water (${waterAvg}%). Only ${Math.round(weekBottles)} bottles this week. WHO recommends ~${WHO_WATER_STANDARDS[CURRENT_CLASS].dailyLitres}L daily for ages ${WHO_WATER_STANDARDS[CURRENT_CLASS].ageRange}. Encouraging water breaks at home can help build this healthy habit.`, severity: 'critical' });
 
         // Attendance
-        if (attendance === 6) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all 6 days. Consistency builds great habits.`, severity: 'positive' });
-        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week (${attendance} out of 6 days present). That day included classes, 3L skills, activities, and fun & games — looking forward to full attendance next week!`, severity: 'info' });
+        if (attendance === totalSchoolDays && totalSchoolDays > 0) tips.push({ icon: '🏆', text: `Perfect attendance! ${name} came all ${totalSchoolDays} school days this week. Consistency builds great habits.`, severity: 'positive' });
+        else if (absentDays === 1) tips.push({ icon: '📅', text: `${name} missed 1 day this week (${attendance} out of ${totalSchoolDays} school days present). That day included classes, 3L skills, activities, and fun & games — looking forward to full attendance next week!`, severity: 'info' });
         else if (absentDays >= 2) tips.push({ icon: '📅', text: `${name} was away for ${absentDays} days this week. Each day at school includes classes, 3L skills, activities, dramatics, fun & games, and many more engaging experiences — consistent attendance helps your child enjoy all of them!`, severity: 'warning' });
 
         // Arrival time insight
@@ -291,6 +312,12 @@ const AIEngine = {
         const attendance = active.length;
         const bottleRefills = active.reduce((s, d) => s + d.bottle_refill, 0);
         const weekBottles = bottleRefills + attendance;
+        // Calculate actual school days
+        const allWeekDays2 = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].map(dayName => {
+            const found = currentWeek.days.find(d => d.day === dayName);
+            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', lunch: 'N/A', snack_completion: 0, lunch_completion: 0, water_completion: 0 };
+        });
+        const totalSchoolDays = allWeekDays2.filter(d => !(d.snacks === 'N/A' && d.lunch === 'N/A' && (!d.arrival_time || d.arrival_time === 'N/A'))).length || attendance;
 
         // Monthly cumulative
         let monthlyBottles = 0, monthlyDaysPresent = 0;
@@ -303,7 +330,7 @@ const AIEngine = {
         // Consistency score
         const consistency = this.calculateConsistencyScore(studentName, weekIdx);
 
-        let summary = `${name} attended ${attendance} out of 6 days during ${currentWeek.label}. `;
+        let summary = `${name} attended ${attendance} out of ${totalSchoolDays} school days during ${currentWeek.label}. `;
 
         if (overall >= 90) summary += `Your child did excellent this week with ${overall}% overall performance. `;
         else if (overall >= 70) summary += `Your child did well this week with ${overall}% overall performance. `;
@@ -439,7 +466,7 @@ const AIEngine = {
                 return;
             }
             if (active.length <= 2) {
-                recs.push({ priority: 'urgent', icon: '⚠️', text: `${name} attended only ${active.length}/6 days. Follow up on absences.`, student: studentName });
+                recs.push({ priority: 'urgent', icon: '⚠️', text: `${name} attended only ${active.length} days this week. Follow up on absences.`, student: studentName });
             }
 
             const snackAvg = this.avg(active, 'snack_completion');
