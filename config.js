@@ -14,7 +14,7 @@ const SCHOOL = {
     name: 'FuturON Preschool Jammalamadugu',
     address: 'Near SBI Bank, Tadipatri Road, Jammalamadugu Town, Kadapa District, Andhra Pradesh - 516434',
     class: 'UKG CLASS',
-    month: 'July 2026'
+    month: '' // Dynamically detected from sheet data
 };
 
 // WHO/IOM Health Standards - Daily Water Intake by Age Group

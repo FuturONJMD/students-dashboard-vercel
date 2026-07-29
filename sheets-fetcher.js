@@ -65,8 +65,8 @@ function parseSheetRows(rows) {
         const isDayRow = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].some(d => rowText.startsWith(d));
         
         if (hasWeek && !hasArrival && !isDayRow) {
-            const weekMatch = rowText.match(/(\d+\w*\s*WEEK)/i);
-            let label = weekMatch ? 'July ' + weekMatch[1] : rowText;
+            // Extract the full week label from the row (e.g., "AUGUST 1ST WEEK" or "JULY 4TH WEEK")
+            let label = rowText;
             for (const s of STUDENTS) {
                 label = label.replace(new RegExp(s, 'gi'), '').trim();
             }

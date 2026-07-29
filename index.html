@@ -375,6 +375,27 @@
 
         const ALL_DAYS = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
 
+        // Detect month from data (week labels like "AUGUST 1ST WEEK" or date ranges)
+        function getMonthFromData() {
+            const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+            if (selectedStudent && studentsData[selectedStudent]) {
+                const weeks = studentsData[selectedStudent];
+                // Check the last week's label for the most recent month
+                for (let i = weeks.length - 1; i >= 0; i--) {
+                    const lbl = (weeks[i].label || '').toUpperCase();
+                    for (const m of months) {
+                        if (lbl.includes(m)) return m.charAt(0) + m.slice(1).toLowerCase() + ' 2026';
+                    }
+                    // Also check date_range (e.g., "Aug 4-9")
+                    const dr = (weeks[i].date_range || '').toUpperCase();
+                    for (const m of months) {
+                        if (dr.includes(m.substring(0, 3))) return m.charAt(0) + m.slice(1).toLowerCase() + ' 2026';
+                    }
+                }
+            }
+            return new Date().toLocaleString('en-US', { month: 'long' }) + ' 2026';
+        }
+
         function getWeekDays(week) {
             return ALL_DAYS.map(dayName => {
                 const found = week.days.find(d => d.day === dayName);
@@ -419,7 +440,7 @@
                 html += `<div class="nav-item ${i === selectedWeekIdx ? 'active' : ''}" onclick="selectWeek(${i})">${w.label}</div>`;
             });
 
-            html += `<div style="margin-top:auto; padding-top:2rem; text-align:center;"><p style="font-size:0.62rem; color:#475569;">UKG Class | July 2026</p></div>`;
+            html += `<div style="margin-top:auto; padding-top:2rem; text-align:center;"><p style="font-size:0.62rem; color:#475569;">UKG Class | ${getMonthFromData()}</p></div>`;
             document.getElementById('sidebar').innerHTML = html;
         }
 
@@ -450,7 +471,7 @@
                         </div>
                         <div class="school-badge">
                             <div class="school-badge-class">UKG CLASS</div>
-                            <div class="school-badge-date">July 2026</div>
+                            <div class="school-badge-date" id="school-month-badge">2026</div>
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; position:relative; z-index:1;">
@@ -716,7 +737,7 @@
         function selectStudent(s) { selectedStudent = s; selectedWeekIdx = 0; render(); }
         function selectWeek(i) { selectedWeekIdx = i; render(); }
 
-        function render() { renderSidebar(); renderMain(); }
+        function render() { renderSidebar(); renderMain(); const mb = document.getElementById('school-month-badge'); if (mb) mb.textContent = getMonthFromData(); }
         function renderApp() {
             if (Object.keys(studentsData).length === 0) {
                 document.getElementById('main').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:60vh;"><div style="text-align:center;"><img src="images/school-logo.jpg" style="width:80px;height:80px;border-radius:14px;margin-bottom:1.2rem;box-shadow:0 4px 16px rgba(0,0,0,0.3);"><div style="font-size:1.3rem;font-weight:700;color:#f8fafc;margin-bottom:0.5rem;">Welcome to FuturON Preschool Jammalamadugu</div><div style="color:#64748b;font-size:0.82rem;">Unable to load. Please check your internet and refresh.</div></div></div>';
