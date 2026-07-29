@@ -669,10 +669,30 @@
             html += `</div>`;
             }
 
-            // Daily snapshot
+            // Daily snapshot - compute dates from date_range
+            const weekDateRange = (week.date_range || '').trim();
+            let weekStartDate = null;
+            const drMatch = weekDateRange.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (drMatch) weekStartDate = new Date(parseInt(drMatch[3]), parseInt(drMatch[2]) - 1, parseInt(drMatch[1]));
+
+            function getDayDate(dayName) {
+                if (!weekStartDate) return '';
+                const schoolDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+                const startJsDay = weekStartDate.getDay(); // 0=Sun...6=Sat
+                const startSchoolIdx = startJsDay === 0 ? 6 : startJsDay - 1;
+                const targetSchoolIdx = schoolDays.indexOf(dayName);
+                let diff = targetSchoolIdx - startSchoolIdx;
+                if (diff < 0) diff += 7;
+                const dt = new Date(weekStartDate);
+                dt.setDate(dt.getDate() + diff);
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return `${dd} ${months[dt.getMonth()]}`;
+            }
+
             html += `<div class="section-header">DAILY SNAPSHOT</div>`;
-            html += `<div style="display:grid; grid-template-columns:1fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.6rem 0; border-bottom:1px solid #334155; margin-bottom:0.4rem;">
-                <span style="font-size:0.62rem; color:#64748b; font-weight:600;">DAY / ARRIVAL</span>
+            html += `<div style="display:grid; grid-template-columns:1.2fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.6rem 0; border-bottom:1px solid #334155; margin-bottom:0.4rem;">
+                <span style="font-size:0.62rem; color:#64748b; font-weight:600;">DAY / DATE / ARRIVAL</span>
                 <span style="font-size:0.62rem; color:#64748b; font-weight:600;">SNACKS / % COMPLETION</span>
                 <span style="font-size:0.62rem; color:#64748b; font-weight:600;">LUNCH / % COMPLETION</span>
                 <span style="font-size:0.62rem; color:#64748b; font-weight:600;">INTERESTED IN / WATER</span>
@@ -684,9 +704,10 @@
                 const hasAnyData = (d.snacks && d.snacks !== 'N/A') || (d.lunch && d.lunch !== 'N/A') || (d.arrival_time && d.arrival_time !== 'N/A') || d.snack_completion > 0 || d.lunch_completion > 0 || d.water_completion > 0;
                 if (!hasAnyData) return;
 
+                const dayDate = getDayDate(d.day);
                 if (isAbsent(d)) {
-                    html += `<div style="display:grid; grid-template-columns:1fr 5fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
-                        <div><div class="snap-day">${d.day}</div></div>
+                    html += `<div style="display:grid; grid-template-columns:1.2fr 5fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
+                        <div><div class="snap-day">${d.day}</div><div style="font-size:0.6rem; color:#94a3b8; font-weight:500;">${dayDate}</div></div>
                         <div style="color:#64748b; font-style:italic; font-size:0.8rem;">Absent</div>
                         <div><span class="badge badge-yellow">ABSENT</span></div>
                     </div>`;
@@ -695,8 +716,8 @@
                 const sp = pct(d.snack_completion), lp = pct(d.lunch_completion), wp = pct(d.water_completion);
                 const uniformBadge = d.uniform === 'YES' ? '<span class="badge badge-green">Uniform</span>' : d.uniform === 'NO' ? '<span class="badge badge-yellow">No</span>' : d.uniform.toUpperCase().includes('COLOUR') ? '<span class="badge badge-purple">Color Day</span>' : `<span class="badge badge-yellow">${d.uniform}</span>`;
                 html += `
-                    <div style="display:grid; grid-template-columns:1fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
-                        <div><div class="snap-day">${d.day}</div><div class="snap-time">${d.arrival_time}</div></div>
+                    <div style="display:grid; grid-template-columns:1.2fr 1.5fr 1.5fr 1.5fr 1fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
+                        <div><div class="snap-day">${d.day}</div><div style="font-size:0.6rem; color:#94a3b8; font-weight:500;">${dayDate}</div><div class="snap-time">${d.arrival_time}</div></div>
                         <div><div class="snap-value">${d.snacks}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${sp}%; background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><div style="font-size:0.62rem; color:#a78bfa; margin-top:3px; font-weight:500;">${sp}% completed</div></div>
                         <div><div class="snap-value">${d.lunch}</div><div class="snap-bar"><div class="snap-bar-fill" style="width:${lp}%; background:linear-gradient(90deg,#059669,#34d399)"></div></div><div style="font-size:0.62rem; color:#34d399; margin-top:3px; font-weight:500;">${lp}% completed</div></div>
                         <div><div class="snap-value">${d.interested_in}</div><div style="font-size:0.62rem; color:#60a5fa; margin-top:5px; font-weight:500;">Water: ${wp}%</div></div>
