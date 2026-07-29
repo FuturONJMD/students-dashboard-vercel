@@ -370,7 +370,7 @@
         let isParentView = parentMode && studentsData[parentMode.toUpperCase()];
 
         let selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
-        let selectedWeekIdx = 0;
+        let selectedWeekIdx = 0; // will be set to latest week on data load
 
 
         const ALL_DAYS = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
@@ -734,7 +734,7 @@
             window.print();
         }
 
-        function selectStudent(s) { selectedStudent = s; selectedWeekIdx = 0; render(); }
+        function selectStudent(s) { selectedStudent = s; selectedWeekIdx = studentsData[s].length - 1; render(); }
         function selectWeek(i) { selectedWeekIdx = i; render(); }
 
         function render() { renderSidebar(); renderMain(); const mb = document.getElementById('school-month-badge'); if (mb) mb.textContent = getMonthFromData(); }
@@ -745,7 +745,7 @@
             }
             isParentView = parentMode && studentsData[parentMode.toUpperCase()];
             selectedStudent = isParentView ? parentMode.toUpperCase() : Object.keys(studentsData)[0];
-            selectedWeekIdx = 0;
+            selectedWeekIdx = studentsData[selectedStudent].length - 1;
             render();
         }
 
