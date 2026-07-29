@@ -6,18 +6,27 @@
 const AIEngine = {
 
     // === HELPERS ===
+    // Check if a day has any data entered (vs placeholder/future day)
+    hasData(d) {
+        if (d.arrival_time && d.arrival_time !== 'N/A') return true;
+        if (d.snacks && d.snacks !== 'N/A') return true;
+        if (d.lunch && d.lunch !== 'N/A') return true;
+        if (d.snack_completion > 0 || d.lunch_completion > 0 || d.water_completion > 0) return true;
+        return false;
+    },
+
+    // Check if child is present (has arrival_time OR has food/water data)
+    isPresent(d) {
+        if (d.arrival_time && d.arrival_time !== 'N/A') return true;
+        if (d.snacks && d.snacks !== 'N/A') return true;
+        if (d.lunch && d.lunch !== 'N/A') return true;
+        if (d.snack_completion > 0 || d.lunch_completion > 0 || d.water_completion > 0) return true;
+        return false;
+    },
+
     getActive(weekData) {
-        const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-        const days = allDays.map(dayName => {
-            const found = weekData.days.find(d => d.day === dayName);
-            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' };
-        });
-        return days.filter(d => {
-            // If child has arrival time, they are PRESENT (even if they ate nothing)
-            if (d.arrival_time && d.arrival_time !== 'N/A') return true;
-            // Otherwise check if they have any activity data
-            return !((d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0));
-        });
+        // Only consider days that actually have data entered (not future/placeholder days)
+        return weekData.days.filter(d => this.isPresent(d));
     },
 
     pct(val) { return Math.min(Math.round(val * 100), 100); },
@@ -379,15 +388,12 @@ const AIEngine = {
         const active = this.getActive(currentWeek);
         const anomalies = [];
         const name = studentName.charAt(0) + studentName.slice(1).toLowerCase();
-        const allDays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].map(dayName => {
-            const found = currentWeek.days.find(d => d.day === dayName);
-            return found || { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, water_completion: 0 };
-        });
-
-        // Consecutive absent days
+        // Consecutive absent days - only check days that have data entered
+        // (don't count future/not-yet-entered days as absent)
+        const daysWithData = currentWeek.days.filter(d => this.hasData(d));
         let consecutiveAbsent = 0, maxConsecutive = 0;
-        allDays.forEach(d => {
-            const absent = (d.snacks === 'N/A' && d.lunch === 'N/A') || (d.snack_completion === 0 && d.lunch_completion === 0 && d.water_completion === 0);
+        daysWithData.forEach(d => {
+            const absent = !this.isPresent(d);
             if (absent) { consecutiveAbsent++; maxConsecutive = Math.max(maxConsecutive, consecutiveAbsent); }
             else { consecutiveAbsent = 0; }
         });
@@ -423,8 +429,14 @@ const AIEngine = {
                     else if (prev - curr > 20) anomalies.push({ severity: 'warning', icon: '🟡', text: `${labels[i]} intake was ${Math.round(prev - curr)}% lower compared to last week. A small change in routine or menu could help bring it back up!`, type: 'trend' });
                 });
 
+                // Only compare attendance if both weeks have similar data completeness
                 const prevAttendance = prevActive.length;
-                if (prevAttendance - active.length >= 2) anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} attended ${prevAttendance - active.length} fewer days compared to last week. Regular attendance helps your child build friendships and stay on track with learning.`, type: 'attendance' });
+                const prevTotalDays = weeks[weekIdx - 1].days.filter(d => this.hasData(d)).length;
+                const currTotalDays = currentWeek.days.filter(d => this.hasData(d)).length;
+                // Only flag if current week has at least as many days of data as previous week
+                if (currTotalDays >= prevTotalDays && prevAttendance - active.length >= 2) {
+                    anomalies.push({ severity: 'warning', icon: '🟡', text: `${name} attended ${prevAttendance - active.length} fewer days compared to last week. Regular attendance helps your child build friendships and stay on track with learning.`, type: 'attendance' });
+                }
             }
         }
 
