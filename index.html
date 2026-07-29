@@ -397,11 +397,35 @@
         }
 
         function getWeekDays(week) {
-            return ALL_DAYS.map(dayName => {
+            // Return days in their chronological order from the sheet (as entered by teacher)
+            // Parse the date_range to determine actual start day of week
+            const dateRange = (week.date_range || '').trim();
+            let startDayOfWeek = 0; // default Monday
+            if (dateRange) {
+                const match = dateRange.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (match) {
+                    const d = new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+                    if (!isNaN(d.getTime())) {
+                        // JS: 0=Sun,1=Mon,...6=Sat → convert to school order: Mon=0,Tue=1,...Sat=5
+                        const jsDay = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+                        startDayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Mon=0, Tue=1, ..., Sat=5
+                    }
+                }
+            }
+            // Build ordered list starting from the actual start day
+            const schoolDayOrder = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+            const orderedDays = [];
+            for (let i = 0; i < 6; i++) {
+                const idx = (startDayOfWeek + i) % 6;
+                const dayName = schoolDayOrder[idx];
                 const found = week.days.find(d => d.day === dayName);
-                if (found) return found;
-                return { day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' };
-            });
+                if (found) {
+                    orderedDays.push(found);
+                } else {
+                    orderedDays.push({ day: dayName, arrival_time: 'N/A', snacks: 'N/A', snack_completion: 0, lunch: 'N/A', lunch_completion: 0, interested_in: 'N/A', water_completion: 0, bottle_refill: 0, uniform: 'N/A' });
+                }
+            }
+            return orderedDays;
         }
         function getActiveDays(days) {
             return days.filter(d => !isAbsent(d));
