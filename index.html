@@ -635,6 +635,10 @@
                 <span style="font-size:0.62rem; color:#64748b; font-weight:600;">UNIFORM</span>
             </div>`;
             days.forEach(d => {
+                // Skip days with no data at all (holidays, future days, 2nd/4th Saturday)
+                const hasAnyData = (d.snacks && d.snacks !== 'N/A') || (d.lunch && d.lunch !== 'N/A') || (d.arrival_time && d.arrival_time !== 'N/A') || d.snack_completion > 0 || d.lunch_completion > 0 || d.water_completion > 0;
+                if (!hasAnyData) return;
+
                 if (isAbsent(d)) {
                     html += `<div style="display:grid; grid-template-columns:1fr 5fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
                         <div><div class="snap-day">${d.day}</div></div>
