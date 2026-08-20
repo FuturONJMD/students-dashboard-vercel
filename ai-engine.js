@@ -23,8 +23,19 @@ const AIEngine = {
         return false;
     },
 
+    isFutureDay(d) {
+        if (!d.date) return false;
+        const m = String(d.date).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (!m) return false;
+        const dayDate = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return dayDate > today;
+    },
+
     hasData(d) {
         if (this.isHoliday(d)) return false;
+        if (this.isFutureDay(d)) return false;
         if (d.date && d.date !== '' && d.date !== 'N/A') return true;
         if (d.arrival_time && d.arrival_time !== 'N/A') return true;
         if (d.snacks && d.snacks !== 'N/A') return true;
@@ -34,7 +45,6 @@ const AIEngine = {
     },
 
     // Check if child is present — ONLY valid arrival_time means present
-    // NULL/empty/N/A/dash/ABSENT in arrival_time = child was NOT at school
     isPresent(d) {
         if (!d.arrival_time || d.arrival_time === 'N/A' || d.arrival_time === '-' || 
             d.arrival_time === '' || d.arrival_time.toUpperCase() === 'ABSENT') return false;
@@ -42,6 +52,7 @@ const AIEngine = {
     },
 
     getActive(weekData) {
+        // Only present days: exclude holidays (hasData=false) and absent days
         return weekData.days.filter(d => this.hasData(d) && this.isPresent(d));
     },
 
@@ -65,8 +76,8 @@ const AIEngine = {
 
         weeks.forEach(w => {
             this.getActive(w).forEach(d => {
-                const snack = (d.snacks || '').toUpperCase().trim();
-                const lunch = (d.lunch || '').toUpperCase().trim();
+                const snack = String(d.snacks || '').toUpperCase().trim();
+                const lunch = String(d.lunch || '').toUpperCase().trim();
                 if (snack && snack !== 'N/A') {
                     snackCounts[snack] = (snackCounts[snack] || 0) + 1;
                     if (this.pct(d.snack_completion) >= 90) highCompletionSnacks[snack] = (highCompletionSnacks[snack] || 0) + 1;
