@@ -8,6 +8,8 @@ const AIEngine = {
     // === HELPERS ===
     // Check if a day has any data entered (vs placeholder/future day)
     hasData(d) {
+        // SECOND SATURDAY is a holiday for all classes — never count as school day
+        if (d.arrival_time && d.arrival_time.toUpperCase().includes('SECOND SATURDAY')) return false;
         if (d.date && d.date !== '' && d.date !== 'N/A') return true;
         if (d.arrival_time && d.arrival_time !== 'N/A') return true;
         if (d.snacks && d.snacks !== 'N/A') return true;
@@ -20,8 +22,7 @@ const AIEngine = {
     // NULL/empty/N/A/dash/ABSENT in arrival_time = child was NOT at school
     isPresent(d) {
         if (!d.arrival_time || d.arrival_time === 'N/A' || d.arrival_time === '-' || 
-            d.arrival_time === '' || d.arrival_time.toUpperCase() === 'ABSENT' ||
-            d.arrival_time.toUpperCase().includes('SECOND SATURDAY')) return false;
+            d.arrival_time === '' || d.arrival_time.toUpperCase() === 'ABSENT') return false;
         return true;
     },
 
