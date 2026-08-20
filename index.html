@@ -472,6 +472,7 @@
 
         function pct(val) { return Math.min(Math.round(val * 100), 100); }
         function hasData(d) {
+            if (d.date && d.date !== '' && d.date !== 'N/A') return true;
             if (d.arrival_time && d.arrival_time !== 'N/A') return true;
             if (d.snacks && d.snacks !== 'N/A') return true;
             if (d.lunch && d.lunch !== 'N/A') return true;
