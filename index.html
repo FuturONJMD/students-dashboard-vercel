@@ -782,10 +782,13 @@
                     return;
                 }
                 if (isAbsent(d)) {
-                    html += `<div style="display:grid; grid-template-columns:1.2fr 5fr 1fr; gap:8px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center;">
-                        <div><div class="snap-day">${d.day}</div><div style="font-size:0.6rem; color:#94a3b8; font-weight:500;">${dayDate}</div></div>
-                        <div style="color:#64748b; font-style:italic; font-size:0.8rem;">Absent</div>
-                        <div><span class="badge badge-yellow">ABSENT</span></div>
+                    html += `<div style="display:grid; grid-template-columns:1fr 1.6fr 1.6fr 1.6fr 0.7fr 0.7fr; gap:18px; padding:0.7rem 0; border-bottom:1px solid rgba(51,65,85,0.4); align-items:center; opacity:0.7;">
+                        <div><div class="snap-day">${d.day}</div><div style="font-size:0.6rem; color:#94a3b8; font-weight:500;">${dayDate}</div><div class="snap-time" style="color:#f43f5e;">ABSENT</div></div>
+                        <div><div class="snap-value" style="color:#f43f5e; font-style:italic;">Absent</div><div class="snap-bar"><div class="snap-bar-fill" style="width:0%; background:#f43f5e"></div></div></div>
+                        <div><div class="snap-value" style="color:#f43f5e; font-style:italic;">Absent</div><div class="snap-bar"><div class="snap-bar-fill" style="width:0%; background:#f43f5e"></div></div></div>
+                        <div><div class="snap-value" style="color:#f43f5e; font-style:italic;">Absent</div><div class="snap-bar"><div class="snap-bar-fill" style="width:0%; background:#f43f5e"></div></div></div>
+                        <div style="text-align:center; color:#f43f5e; font-size:0.75rem;">--</div>
+                        <div style="text-align:center;"><span class="badge badge-yellow">ABSENT</span></div>
                     </div>`;
                     return;
                 }
