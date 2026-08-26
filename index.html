@@ -1271,7 +1271,31 @@
             const circumference = 2 * Math.PI * 45;
             const dashOffset = circumference - (gaugeScore / 100) * circumference;
 
+            // Quick Summary Card
+            const attPct = totalSchoolDays > 0 ? Math.round((active.length / totalSchoolDays) * 100) : 0;
+            const overallSt = getOverallStatus(attPct, snackAvg, lunchAvg, waterAvg);
+            const concerns = [];
+            if (attPct < 60) concerns.push('attendance');
+            if (snackAvg < 60) concerns.push('morning snack');
+            if (lunchAvg < 60) concerns.push('afternoon meal');
+            if (waterAvg < 60) concerns.push('hydration');
+            const tipText = AIEngine.generateTips(selectedStudent, selectedWeekIdx)[0] || 'Keep up the great routine!';
+
             let html = `
+                <div class="quick-summary ${overallSt.cls}">
+                    <div class="quick-summary-title">${overallSt.emoji} ${studentNameFormatted} ${overallSt.text}</div>
+                    <div class="quick-summary-grid">
+                        <div class="quick-summary-item">${getStatusDot(attPct)}<div class="quick-summary-label">Attendance</div><div class="quick-summary-value">${active.length}/${totalSchoolDays}</div></div>
+                        <div class="quick-summary-item">${getStatusDot(snackAvg)}<div class="quick-summary-label">Nutrition</div><div class="quick-summary-value">${Math.round((snackAvg + lunchAvg) / 2)}%</div></div>
+                        <div class="quick-summary-item">${getStatusDot(waterAvg)}<div class="quick-summary-label">Hydration</div><div class="quick-summary-value">${Math.round(waterAvg)}%</div></div>
+                        <div class="quick-summary-item">${concerns.length === 0 ? '<span class="quick-summary-dot dot-green"></span>' : '<span class="quick-summary-dot dot-yellow"></span>'}<div class="quick-summary-label">Status</div><div class="quick-summary-value">${concerns.length === 0 ? 'All Good' : concerns.length + ' area(s)'}</div></div>
+                    </div>
+                    <div class="quick-summary-tip">${tipText}</div>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="summary" onclick="setViewMode('summary')">Summary</button>
+                    <button class="view-toggle-btn" data-view="detailed" onclick="setViewMode('detailed')">Detailed</button>
+                </div>
                 ${achievements.length > 0 ? `<div class="achievement-strip">${achievements.map(a => `<div class="achievement ${a.cls}">${a.icon} ${a.text}</div>`).join('')}</div>` : ''}
                 <div class="section-header section-toggle" style="margin-top:1.5rem;" onclick="toggleSection('sec-nourishment')">NOURISHMENT & WELLNESS</div><div id="sec-nourishment" class="section-content">
                 <div class="kpi-grid">
